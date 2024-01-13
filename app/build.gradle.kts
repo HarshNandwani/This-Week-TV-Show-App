@@ -90,6 +90,8 @@ dependencies {
     // Lifecycle utilities for Compose
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
 
+    implementation("androidx.navigation:navigation-compose:2.7.6")
+
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.google.truth:truth:1.1.3")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")

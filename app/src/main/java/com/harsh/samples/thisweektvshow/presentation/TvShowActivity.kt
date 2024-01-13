@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.harsh.samples.thisweektvshow.presentation.screens.TvShowsListScreen
+import androidx.navigation.compose.rememberNavController
+import com.harsh.samples.thisweektvshow.presentation.navigation.NavGraph
 import com.harsh.samples.thisweektvshow.presentation.theme.ThisWeekTVShowTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -26,7 +26,12 @@ class TvShowActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    TvShowsListScreen(state = viewModel.state.collectAsStateWithLifecycle().value)
+                    val navController = rememberNavController()
+                    NavGraph(
+                        navHostController = navController,
+                        viewModel = viewModel
+                    )
+
                 }
             }
         }

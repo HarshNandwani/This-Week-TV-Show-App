@@ -1,4 +1,4 @@
-package com.harsh.samples.thisweektvshow.ui.theme
+package com.harsh.samples.thisweektvshow.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 

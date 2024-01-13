@@ -1,4 +1,4 @@
-package com.harsh.samples.thisweektvshow.ui.theme
+package com.harsh.samples.thisweektvshow.presentation.theme
 
 import android.app.Activity
 import android.os.Build

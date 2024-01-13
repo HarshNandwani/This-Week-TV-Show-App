@@ -1,4 +1,4 @@
-package com.harsh.samples.thisweektvshow
+package com.harsh.samples.thisweektvshow.presentation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.harsh.samples.thisweektvshow.ui.theme.ThisWeekTVShowTheme
+import com.harsh.samples.thisweektvshow.presentation.theme.ThisWeekTVShowTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

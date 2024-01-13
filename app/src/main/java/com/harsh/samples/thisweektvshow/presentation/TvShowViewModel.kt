@@ -40,6 +40,17 @@ class TvShowViewModel @Inject constructor(
                 loadDetailedTvShow(show = event.tvShow)
                 loadSimilarTvShows(show = event.tvShow)
             }
+
+            is UiEvent.OnFavorite -> {
+                if (event.tvShow.id == _state.value.detailedTvShow?.id)
+                    _state.value = _state.value.copy(
+                        detailedTvShow = _state.value.detailedTvShow?.copy(isFavorite = true)
+                    )
+                // TODO: remove this manual update below once favorite is persisted in room db
+                _state.value = _state.value.copy(
+                    data = _state.value.data.map { if (it.id == event.tvShow.id) it.copy(isFavorite = true) else it }
+                )
+            }
         }
     }
 

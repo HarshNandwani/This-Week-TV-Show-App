@@ -36,7 +36,7 @@ import com.harsh.samples.thisweektvshow.presentation.composeables.SingleTvShow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TvShowDetailScreen(state: UiState, onBackPress: () -> Unit) {
+fun TvShowDetailScreen(state: UiState, onFavorite: (tvShow: TvShow) -> Unit, onBackPress: () -> Unit) {
     Log.d("Recomposition", "Details screen ${state.metaData.detailedDataState}")
     when (state.metaData.detailedDataState) {
         NotRequested -> { return }
@@ -77,9 +77,11 @@ fun TvShowDetailScreen(state: UiState, onBackPress: () -> Unit) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /*TODO*/ }) {
+                    IconButton(onClick = { onFavorite(state.detailedTvShow) }) {
                         Icon(
-                            painter = painterResource(id = R.drawable.favorite_outline),
+                            painter = painterResource(
+                                id = if (state.detailedTvShow.isFavorite) R.drawable.favorite_filled else R.drawable.favorite_outline
+                            ),
                             contentDescription = "favorite"
                         )
                     }
@@ -150,5 +152,5 @@ fun PreviewTvShowDetailScreen() {
         )
     )
 
-    TvShowDetailScreen(UiState(detailedTvShow = gameOfThronesShow), onBackPress = { })
+    TvShowDetailScreen(UiState(detailedTvShow = gameOfThronesShow), onFavorite = { },onBackPress = { })
 }

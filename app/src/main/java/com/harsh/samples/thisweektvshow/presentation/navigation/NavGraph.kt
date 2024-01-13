@@ -30,7 +30,10 @@ fun NavGraph(
         }
 
         composable(route = Screen.DetailScreen.route) {
-            TvShowDetailScreen(state, onBackPress = { navHostController.popBackStack() })
+            TvShowDetailScreen(
+                state,
+                onFavorite = { viewModel.onEvent(UiEvent.OnFavorite(it)) } ,
+                onBackPress = { navHostController.popBackStack() })
         }
     }
 }

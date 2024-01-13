@@ -42,13 +42,21 @@ fun SingleTvShow(
 
             Column(Modifier.padding(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = tvShow.title, style = MaterialTheme.typography.titleMedium, overflow = TextOverflow.Ellipsis, maxLines = 1)
-                    Spacer(modifier = Modifier.weight(1f))
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = "Favorite",
-                        Modifier.size(14.dp)
+                    Text(
+                        text = tvShow.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        modifier = Modifier.weight(if (tvShow.isFavorite) 6f else 100f)
                     )
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (tvShow.isFavorite) {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = "Favorite",
+                            Modifier.size(14.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.size(6.dp))

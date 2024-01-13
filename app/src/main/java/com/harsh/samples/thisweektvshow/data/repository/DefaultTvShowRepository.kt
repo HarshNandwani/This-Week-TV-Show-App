@@ -55,7 +55,21 @@ class DefaultTvShowRepository(
     }
 
     override suspend fun getSimilarTvShows(similarToShowId: Long): Result<List<TvShow>> {
-        TODO("Not yet implemented")
+        val response = try {
+            remoteDataSource.getSimilarTvShows(similarToShowId)
+        } catch (e: Exception) {
+            return Result.Failure(e)
+        }
+
+        return if (response.isSuccessful) {
+            val tvShowsDto =
+                response.body()?.results
+                    ?: return Result.Failure(Exception(response.exceptionMessage()))
+            val tvShows = tvShowsDto.map { it.toDomain() }
+            Result.Success(tvShows)
+        } else {
+            Result.Failure(TvShowLoadException(response.exceptionMessage()))
+        }
     }
 
     // Utility functions

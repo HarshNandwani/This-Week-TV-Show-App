@@ -2,8 +2,11 @@ package com.harsh.samples.thisweektvshow.presentation.screens
 
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -29,6 +32,7 @@ import com.harsh.samples.thisweektvshow.presentation.composeables.CircularProgre
 import com.harsh.samples.thisweektvshow.presentation.composeables.DetailedTvShow
 import com.harsh.samples.thisweektvshow.presentation.composeables.ErrorText
 import com.harsh.samples.thisweektvshow.presentation.composeables.SingleSeason
+import com.harsh.samples.thisweektvshow.presentation.composeables.SingleTvShow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,6 +89,7 @@ fun TvShowDetailScreen(state: UiState, onBackPress: () -> Unit) {
     ) { paddingValues ->
         DetailedTvShowWithSeasons(
             tvShow = state.detailedTvShow,
+            similarShows = state.similarTvShows,
             modifier = Modifier.padding(paddingValues)
         )
     }
@@ -92,7 +97,7 @@ fun TvShowDetailScreen(state: UiState, onBackPress: () -> Unit) {
 }
 
 @Composable
-fun DetailedTvShowWithSeasons(tvShow: TvShow, modifier: Modifier = Modifier) {
+fun DetailedTvShowWithSeasons(tvShow: TvShow, similarShows: List<TvShow>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier) {
         item {
             DetailedTvShow(tvShow = tvShow)
@@ -101,6 +106,17 @@ fun DetailedTvShowWithSeasons(tvShow: TvShow, modifier: Modifier = Modifier) {
 
         items(tvShow.seasons) { tvShowSeason ->
             SingleSeason(season = tvShowSeason)
+        }
+
+        item {
+            Text(text = "Similar shows", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(16.dp))
+            LazyRow {
+                items(similarShows) { tvShow ->
+                    //TODO: Improve UI
+                    SingleTvShow(tvShow = tvShow, onShowClick = {  })
+                }
+            }
+            Spacer(modifier = Modifier.size(12.dp))
         }
     }
 

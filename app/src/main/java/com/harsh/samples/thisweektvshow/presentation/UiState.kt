@@ -3,15 +3,17 @@ package com.harsh.samples.thisweektvshow.presentation
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 
 data class UiState(
-    val metaData: MetaData = MetaData(),
+    var metaData: MetaData = MetaData(),
     val data: List<TvShow> = emptyList(),
-    val detailedTvShow: TvShow? = null
+    val detailedTvShow: TvShow? = null,
+    val similarTvShows: List<TvShow> = emptyList()
 )
 
 data class MetaData(
-    val dataState: DataState = DataState.NotRequested,
     val message: String? = null,
-    val detailedDataState: DataState = DataState.NotRequested // used when loading details of tv show
+    val dataState: DataState = DataState.NotRequested,
+    val detailedDataState: DataState = DataState.NotRequested,
+    val similarTvShowsDataState: DataState = DataState.NotRequested
 )
 
 enum class DataState { NotRequested, Loading, Success, Failed }

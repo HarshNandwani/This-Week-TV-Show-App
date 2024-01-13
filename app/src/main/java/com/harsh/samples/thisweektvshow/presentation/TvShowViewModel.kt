@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 import com.harsh.samples.thisweektvshow.domain.use_case.GetShowDetailsUseCase
+import com.harsh.samples.thisweektvshow.domain.use_case.GetSimilarShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetThisWeekTrendingShowsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -16,13 +17,15 @@ import javax.inject.Inject
 @HiltViewModel
 class TvShowViewModel @Inject constructor(
     private val getThisWeekTrendingShows: GetThisWeekTrendingShowsUseCase,
-    private val getShowDetails: GetShowDetailsUseCase
+    private val getShowDetails: GetShowDetailsUseCase,
+    private val getSimilarShows: GetSimilarShowsUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state
 
     private var loadDetailedTvShowJob: Job? = null
+    private var loadSimilarTvShowsJob: Job? = null
 
     init {
         loadThisWeekTrendingTvShows()
@@ -35,6 +38,7 @@ class TvShowViewModel @Inject constructor(
                     metaData = _state.value.metaData.copy(detailedDataState = DataState.Loading)
                 )
                 loadDetailedTvShow(show = event.tvShow)
+                loadSimilarTvShows(show = event.tvShow)
             }
         }
     }
@@ -57,6 +61,26 @@ class TvShowViewModel @Inject constructor(
                             detailedDataState = DataState.Failed,
                             message = it.message ?: "Something went wrong"
                         )
+                    )
+                }
+        }
+    }
+
+    private fun loadSimilarTvShows(show: TvShow) {
+        loadSimilarTvShowsJob?.cancel()
+        loadSimilarTvShowsJob = viewModelScope.launch(Dispatchers.IO) {
+            getSimilarShows(show)
+                .onSuccess { similarTvShows ->
+                    _state.value = _state.value.copy(
+                        similarTvShows = similarTvShows,
+                        metaData = _state.value.metaData.copy(similarTvShowsDataState = DataState.Success)
+                    )
+                }
+                .onFailure {
+                    //fixme: what if both loadDetailedTvShow and loadSimilarTvShows fail? there's only a single message
+                    _state.value.metaData = _state.value.metaData.copy(
+                        similarTvShowsDataState = DataState.Failed,
+                        message = it.message ?: "Something went wrong"
                     )
                 }
         }

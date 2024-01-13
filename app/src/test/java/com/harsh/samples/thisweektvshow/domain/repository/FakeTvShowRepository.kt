@@ -17,12 +17,14 @@ class FakeTvShowRepository : TvShowRepository {
         return Result.Success(tvShowList)
     }
 
-    override suspend fun getTvShowDetails(tvShow: TvShow): TvShow {
-        return tvShow.copy(
-            genres = listOf("Crime", "Drama"),
-            seasons = listOf(
-                TvShowSeason(1, "Season 1", 10, 1, 9.6f),
-                TvShowSeason(2, "Season 2", 13, 2, 9.9f)
+    override suspend fun getTvShowDetails(tvShow: TvShow): Result<TvShow> {
+        return Result.Success(
+            tvShow.copy(
+                genres = listOf("Crime", "Drama"),
+                seasons = listOf(
+                    TvShowSeason(1, "Season 1", 10, 1, 9.6f),
+                    TvShowSeason(2, "Season 2", 13, 2, 9.9f)
+                )
             )
         )
     }

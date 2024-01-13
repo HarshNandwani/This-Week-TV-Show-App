@@ -16,7 +16,7 @@ interface TvShowRepository {
     * because we get some details like overview in trending api itself but some details like genres & seasons in detail api
     * so passing and returning same type, but the return is with more details!
     * */
-    suspend fun getTvShowDetails(tvShow: TvShow): TvShow
+    suspend fun getTvShowDetails(tvShow: TvShow): Result<TvShow>
 
     /*
     * Loads TV Shows matching query parameter

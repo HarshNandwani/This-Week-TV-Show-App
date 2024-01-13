@@ -19,7 +19,7 @@ import com.harsh.samples.thisweektvshow.domain.model.TvShowSeason
 fun SingleSeason(season: TvShowSeason) {
     Row(
         Modifier
-            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
             .border(
                 border = BorderStroke(
                     width = 1.dp,

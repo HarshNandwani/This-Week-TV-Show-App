@@ -2,11 +2,9 @@ package com.harsh.samples.thisweektvshow.presentation.screens
 
 import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,37 +16,37 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.harsh.samples.thisweektvshow.R
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 import com.harsh.samples.thisweektvshow.domain.model.TvShowSeason
 import com.harsh.samples.thisweektvshow.presentation.DataState.*
 import com.harsh.samples.thisweektvshow.presentation.UiState
 import com.harsh.samples.thisweektvshow.presentation.composeables.CircularProgressBar
+import com.harsh.samples.thisweektvshow.presentation.composeables.DetailedTvShow
 import com.harsh.samples.thisweektvshow.presentation.composeables.ErrorText
+import com.harsh.samples.thisweektvshow.presentation.composeables.SingleSeason
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TvShowDetailScreen(state: UiState, onBackPress: () -> Unit) {
     Log.d("Recomposition", "Details screen ${state.metaData.detailedDataState}")
     when (state.metaData.detailedDataState) {
-        NotRequested -> {  }
+        NotRequested -> { return }
 
         Loading -> {
             CircularProgressBar()
+            return
         }
 
-        Success -> {
-            state.detailedTvShow?.let { DetailedTvShow(tvShow = it, onBackPress = onBackPress) }
-        }
+        Success -> {}
 
         Failed -> {
             ErrorText(message = state.metaData.message ?: "Something went wrong")
+            return
         }
     }
 
@@ -56,15 +54,13 @@ fun TvShowDetailScreen(state: UiState, onBackPress: () -> Unit) {
         onBackPress()
     }
 
-}
+    if (state.metaData.detailedDataState != Success) return
+    if (state.detailedTvShow == null) return
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DetailedTvShow(tvShow: TvShow, onBackPress: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = tvShow.title) },
+                title = { Text(text = state.detailedTvShow.title) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -78,39 +74,38 @@ fun DetailedTvShow(tvShow: TvShow, onBackPress: () -> Unit) {
                 },
                 actions = {
                     IconButton(onClick = { /*TODO*/ }) {
-                        Icon(painter = painterResource(id = R.drawable.favorite_outline), contentDescription = "search")
+                        Icon(
+                            painter = painterResource(id = R.drawable.favorite_outline),
+                            contentDescription = "favorite"
+                        )
                     }
                 }
             )
         }
     ) { paddingValues ->
-        Column(Modifier.padding(paddingValues)) {
-            AsyncImage(
-                model = tvShow.backdropUrl,
-                contentDescription = "cover image"
-            )
+        DetailedTvShowWithSeasons(
+            tvShow = state.detailedTvShow,
+            modifier = Modifier.padding(paddingValues)
+        )
+    }
 
-            Column(Modifier.padding(16.dp)) {
+}
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "Genres: ", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.size(4.dp))
-                    Text(text = tvShow.genres.toString())
-                }
+@Composable
+fun DetailedTvShowWithSeasons(tvShow: TvShow, modifier: Modifier = Modifier) {
+    LazyColumn(modifier = modifier) {
+        item {
+            DetailedTvShow(tvShow = tvShow)
+            Text(text = "List of seasons", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(16.dp))
+        }
 
-                Spacer(modifier = Modifier.size(6.dp))
-                Text(text = "Overview", style = MaterialTheme.typography.titleMedium)
-
-                Spacer(modifier = Modifier.size(2.dp))
-                Text(text = tvShow.overview, textAlign = TextAlign.Justify)
-
-                Spacer(modifier = Modifier.size(6.dp))
-                SeasonsList(seasons = tvShow.seasons)
-
-            }
+        items(tvShow.seasons) { tvShowSeason ->
+            SingleSeason(season = tvShowSeason)
         }
     }
+
 }
+
 
 //TODO: Make ui better!
 
@@ -139,5 +134,5 @@ fun PreviewTvShowDetailScreen() {
         )
     )
 
-    TvShowDetailScreen(UiState(detailedTvShow = gameOfThronesShow), onBackPress = {  })
+    TvShowDetailScreen(UiState(detailedTvShow = gameOfThronesShow), onBackPress = { })
 }

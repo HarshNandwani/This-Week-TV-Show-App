@@ -1,5 +1,7 @@
 package com.harsh.samples.thisweektvshow.presentation.screens
 
+import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,35 +20,64 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 import com.harsh.samples.thisweektvshow.domain.model.TvShowSeason
+import com.harsh.samples.thisweektvshow.presentation.DataState.*
+import com.harsh.samples.thisweektvshow.presentation.UiState
+import com.harsh.samples.thisweektvshow.presentation.composeables.CircularProgressBar
+import com.harsh.samples.thisweektvshow.presentation.composeables.ErrorText
 import com.harsh.samples.thisweektvshow.presentation.composeables.SingleSeason
 
 @Composable
-fun TvShowDetailScreen(detailedTvShow: TvShow) {
+fun TvShowDetailScreen(state: UiState, onBackPress: () -> Unit) {
+    Log.d("Recomposition", "Details screen ${state.metaData.detailedDataState}")
+    when (state.metaData.detailedDataState) {
+        NotRequested -> {  }
+
+        Loading -> {
+            CircularProgressBar()
+        }
+
+        Success -> {
+            state.detailedTvShow?.let { DetailedTvShow(tvShow = it) }
+        }
+
+        Failed -> {
+            ErrorText(message = state.metaData.message ?: "Something went wrong")
+        }
+    }
+
+    BackHandler {
+        onBackPress()
+    }
+
+}
+
+@Composable
+fun DetailedTvShow(tvShow: TvShow) {
     Column {
         AsyncImage(
-            model = detailedTvShow.backdropUrl,
+            model = tvShow.backdropUrl,
             contentDescription = "cover image"
         )
-        
+
         Column(Modifier.padding(16.dp)) {
-            
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "Genres: ", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.size(4.dp))
-                Text(text = detailedTvShow.genres.toString())
+                Text(text = tvShow.genres.toString())
             }
-            
+
             Spacer(modifier = Modifier.size(6.dp))
             Text(text = "Overview", style = MaterialTheme.typography.titleMedium)
 
             Spacer(modifier = Modifier.size(2.dp))
-            Text(text = detailedTvShow.overview, textAlign = TextAlign.Justify)
+            Text(text = tvShow.overview, textAlign = TextAlign.Justify)
 
             Spacer(modifier = Modifier.size(6.dp))
             Text(text = "List of seasons", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.size(2.dp))
             LazyColumn {
-                items(detailedTvShow.seasons) {tvShowSeason ->
+                items(tvShow.seasons) { tvShowSeason ->
                     SingleSeason(season = tvShowSeason)
                     Spacer(modifier = Modifier.size(4.dp))
                 }
@@ -83,5 +114,5 @@ fun PreviewTvShowDetailScreen() {
         )
     )
 
-    TvShowDetailScreen(gameOfThronesShow)
+    TvShowDetailScreen(UiState(detailedTvShow = gameOfThronesShow), onBackPress = {  })
 }

@@ -32,7 +32,7 @@ class TvShowViewModel @Inject constructor(
         when(event) {
             is UiEvent.LoadTvShowDetails -> {
                 _state.value = _state.value.copy(
-                    metaData = MetaData(detailedDataState = DataState.Loading)
+                    metaData = _state.value.metaData.copy(detailedDataState = DataState.Loading)
                 )
                 loadDetailedTvShow(show = event.tvShow)
             }
@@ -46,7 +46,9 @@ class TvShowViewModel @Inject constructor(
             getShowDetails(show)
                 .onSuccess { detailedTvShow ->
                     _state.value = _state.value.copy(
-                        data = _state.value.data.map { if (it.id == show.id) detailedTvShow else it }
+                        //data = _state.value.data.map { if (it.id == show.id) detailedTvShow else it }
+                        detailedTvShow = detailedTvShow,
+                        metaData = _state.value.metaData.copy(detailedDataState = DataState.Success)
                     )
                 }
                 .onFailure {

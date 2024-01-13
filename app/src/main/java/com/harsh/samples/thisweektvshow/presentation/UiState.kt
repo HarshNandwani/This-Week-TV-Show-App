@@ -4,7 +4,8 @@ import com.harsh.samples.thisweektvshow.domain.model.TvShow
 
 data class UiState(
     val metaData: MetaData = MetaData(),
-    val data: List<TvShow> = emptyList()
+    val data: List<TvShow> = emptyList(),
+    val detailedTvShow: TvShow? = null
 )
 
 data class MetaData(

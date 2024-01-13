@@ -24,10 +24,13 @@ import com.harsh.samples.thisweektvshow.domain.model.TvShow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SingleTvShow(tvShow: TvShow) {
+fun SingleTvShow(
+    tvShow: TvShow,
+    onShowClick: (tvShow: TvShow) -> Unit
+) {
     Card(
         modifier = Modifier.padding(4.dp),
-        onClick = {  }
+        onClick = { onShowClick(tvShow) }
     ) {
         Column {
             AsyncImage(
@@ -80,5 +83,5 @@ fun PreviewSingleTvShow() {
         listOf("Drama", "Action & Adventure")
     )
 
-    SingleTvShow(tvShow = gameOfThronesShow)
+    SingleTvShow(tvShow = gameOfThronesShow, onShowClick = {  })
 }

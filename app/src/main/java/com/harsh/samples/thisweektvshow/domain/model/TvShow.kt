@@ -5,6 +5,7 @@ data class TvShow(
     val title: String,
     val overview: String,
     val posterUrl: String,
+    val backdropUrl: String,
     val voteAvg: Float,
     val genres: List<String> = emptyList(),
     val seasons: List<TvShowSeason> = emptyList(),

@@ -1,5 +1,6 @@
 package com.harsh.samples.thisweektvshow.data.repository
 
+import com.harsh.samples.thisweektvshow.data.remote.Constants.backdropBaseUrl
 import com.harsh.samples.thisweektvshow.data.remote.Constants.posterBaseUrl
 import com.harsh.samples.thisweektvshow.data.remote.TheMovieDbApi
 import com.harsh.samples.thisweektvshow.data.remote.dto.DetailedTvShowDto
@@ -67,6 +68,7 @@ class DefaultTvShowRepository(
         this.name,
         this.overview,
         "$posterBaseUrl${this.posterPath}",
+        "$backdropBaseUrl${this.backdropPath}",
         this.voteAverage,
     )
 
@@ -75,6 +77,7 @@ class DefaultTvShowRepository(
         this.name,
         this.overview,
         "$posterBaseUrl${this.posterPath}",
+        "$backdropBaseUrl${this.backdropPath}",
         this.voteAverage,
         this.genres.map { it.name },
         this.seasons.map {

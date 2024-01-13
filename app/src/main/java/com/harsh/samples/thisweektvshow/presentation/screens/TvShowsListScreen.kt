@@ -1,4 +1,4 @@
-package com.harsh.samples.thisweektvshow.presentation
+package com.harsh.samples.thisweektvshow.presentation.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 import com.harsh.samples.thisweektvshow.presentation.DataState.*
+import com.harsh.samples.thisweektvshow.presentation.UiState
 import com.harsh.samples.thisweektvshow.presentation.composeables.SingleTvShow
 
 @Composable

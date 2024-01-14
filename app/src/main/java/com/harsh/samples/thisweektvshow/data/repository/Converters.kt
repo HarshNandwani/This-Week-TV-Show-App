@@ -45,12 +45,14 @@ fun TvShowEntity.toDomain(): TvShow = TvShow(
     isFavorite = this.isFavorite
 )
 
-fun TvShow.toEntity() = TvShowEntity(
+fun TvShow.toEntity(isTrending: Boolean = false, trendingNumber: Int = -1) = TvShowEntity(
     this.id,
     this.title,
     this.overview,
     this.posterUrl,
     this.backdropUrl,
     this.voteAvg,
-    false
+    false,
+    isTrending,
+    trendingNumber
 )

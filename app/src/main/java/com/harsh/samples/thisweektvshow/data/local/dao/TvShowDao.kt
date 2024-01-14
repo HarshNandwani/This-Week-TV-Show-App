@@ -17,6 +17,12 @@ interface TvShowDao {
     @Query("SELECT * FROM TvShowEntity")
     suspend fun getAll(): List<TvShowEntity>
 
+    @Query("SELECT * FROM TvShowEntity WHERE isTrending = 1 ORDER BY trendingNumber")
+    suspend fun getTrendingTvShows(): List<TvShowEntity>
+
+    @Query("SELECT * FROM TvShowEntity WHERE isFavorite = 1")
+    suspend fun getFavoriteTvShows(): List<TvShowEntity>
+
     @Query("SELECT * FROM TvShowEntity WHERE id = :id")
     suspend fun get(id: Long): TvShowEntity?
 

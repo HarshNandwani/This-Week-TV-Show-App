@@ -21,7 +21,7 @@ import retrofit2.Response
 *
 * [Implementation Details] I have made this repository to be single source of truth - it might take little longer to
 * load data but the returned data would be inclusive of everything the ui/presentation might need.
-* ex: Repository takes case of inferring previously added favorites in local and apply them to new data from remote.
+* ex: Repository takes care of inferring previously added favorites in local and apply them to new data from remote.
 *
 * For faster load times we can implement certain logic in ViewModel.
 * ex: ViewModel loads remote data first and displays it ASAP, then loads local data to later show favorites in UI
@@ -56,7 +56,7 @@ class DefaultTvShowRepository(
         val remoteDataResult: Result<List<TvShow>>
         val localDataResult: Result<List<TvShow>>
 
-        val localDataJob = async { loadShowsLocal() }
+        val localDataJob = async { loadTrendingShowsLocal() }
         if (!connectivityDataSource.isConnected()) {
             localDataResult = localDataJob.await()
             when (localDataResult) {
@@ -82,7 +82,9 @@ class DefaultTvShowRepository(
                     val updatedTvShowsWithFavorites = inferFavoritesIfAny(localTvShows, remoteDataResult.data)
                     // add these results to local db for caching
                     extCoroutineScope.launch(extCoroutineScope.coroutineContext) {
-                        remoteDataResult.data.forEach { localDataSource.addTvShow(it.toEntity()) }
+                        remoteDataResult.data.forEachIndexed { index, tvShow ->
+                            localDataSource.addTvShow(tvShow.toEntity(isTrending = true, trendingNumber = index+1))
+                        }
                     }
                     Result.Success(Data(updatedTvShowsWithFavorites, Source.REMOTE, "Successful load"))
                 }
@@ -125,10 +127,16 @@ class DefaultTvShowRepository(
         }
 
         return if (response.isSuccessful) {
-            val searchedTvShows = response.body()?.results ?: return Result.Failure(
+            val searchedTvShowsDto = response.body()?.results ?: return Result.Failure(
                 TvShowLoadException(response.exceptionMessage())
             )
-            Result.Success(searchedTvShows.map { it.toDomain() })
+            val searchedTvShows = searchedTvShowsDto.map { it.toDomain() }
+            // add tv shows to local
+            extCoroutineScope.launch(extCoroutineScope.coroutineContext) {
+                searchedTvShows.forEach { localDataSource.addTvShow(it.toEntity()) }
+            }
+            val searchedTvShowsWithFavorites = inferFavoritesIfAny(loadFavoriteShowsLocal(), searchedTvShows)
+            Result.Success(searchedTvShowsWithFavorites)
         } else {
             Result.Failure(TvShowLoadException(response.exceptionMessage()))
         }
@@ -180,13 +188,27 @@ class DefaultTvShowRepository(
         }
     }
 
-    private suspend fun loadShowsLocal(): Result<List<TvShow>> {
-        val tvShowEntities = localDataSource.getAll()
+    private suspend fun loadTrendingShowsLocal(): Result<List<TvShow>> {
+        val tvShowEntities = localDataSource.getTrendingTvShows()
         return if (tvShowEntities.isEmpty()) {
             Result.Failure(TvShowLoadException("No data"))
         } else {
             Result.Success(tvShowEntities.map { it.toDomain() })
         }
+    }
+
+    /*
+    * [Implementation Details] Instead of always loading favorites shows from db we can also just load a list of ids
+    * that are favorite on app start and keep adding ids to list when user adds tv shows to favorite from ui.
+    *
+    * It depends if there's only android client where favorites can be added or there are other clients like website
+    * also depends on requirements of how often we need to update it and
+    * how important is consistency compared to additional computation
+    *
+    * Although in our case there's only one client but To not make it very simpler I'm doing it this way.
+    * */
+    private suspend fun loadFavoriteShowsLocal(): List<TvShow> {
+        return localDataSource.getFavoriteTvShows().map { it.toDomain() }
     }
 
     //As favorites are persisted locally, here we take local and remote list and updated of shows are favorite in remote list

@@ -12,5 +12,7 @@ data class TvShowEntity(
     val posterUrl: String,
     val backdropUrl: String,
     val voteAvg: Float,
-    val isFavorite: Boolean
+    val isFavorite: Boolean,
+    val isTrending: Boolean,
+    val trendingNumber: Int
 )

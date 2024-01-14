@@ -5,23 +5,39 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 
 @Composable
 fun DetailedTvShow(tvShow: TvShow) {
     Column {
-        AsyncImage(
+        SubcomposeAsyncImage(
             model = tvShow.backdropUrl,
-            contentDescription = "cover image"
-        )
+            contentDescription = "${tvShow.title} cover image"
+        ) {
+            when (painter.state) {
+                AsyncImagePainter.State.Empty -> {  }
+                is AsyncImagePainter.State.Error -> {
+                    Icon(imageVector = Icons.Default.Warning, contentDescription = "Error", tint = Color.Red)
+                }
+                is AsyncImagePainter.State.Loading -> { CircularProgressIndicator() }
+                is AsyncImagePainter.State.Success -> SubcomposeAsyncImageContent()
+            }
+        }
 
         Column(Modifier.padding(16.dp)) {
 

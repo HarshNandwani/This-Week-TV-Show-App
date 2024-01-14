@@ -75,6 +75,8 @@ class DefaultTvShowRepository(
     }
 
     override suspend fun getTvShowDetails(tvShow: TvShow): Result<TvShow> {
+        if (!connectivityDataSource.isConnected())
+            return Result.Failure(TvShowLoadException("Not connected to internet"))
         val response = try {
             remoteDataSource.getTvShowDetails(tvShow.id)
         } catch (e: Exception) {
@@ -93,6 +95,8 @@ class DefaultTvShowRepository(
     }
 
     override suspend fun getSearchedTvShows(query: String): Result<List<TvShow>> {
+        if (!connectivityDataSource.isConnected())
+            return Result.Failure(TvShowLoadException("Cannot load search data - No internet connection"))
         val response = try {
             remoteDataSource.getSearchedTvShows(query)
         } catch (e: Exception) {
@@ -110,6 +114,8 @@ class DefaultTvShowRepository(
     }
 
     override suspend fun getSimilarTvShows(similarToShowId: Long): Result<List<TvShow>> {
+        if (!connectivityDataSource.isConnected())
+            return Result.Failure(TvShowLoadException("Not connected to internet"))
         val response = try {
             remoteDataSource.getSimilarTvShows(similarToShowId)
         } catch (e: Exception) {

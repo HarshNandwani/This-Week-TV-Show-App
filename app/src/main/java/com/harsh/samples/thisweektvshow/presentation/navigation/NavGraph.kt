@@ -22,6 +22,7 @@ fun NavGraph(
         composable(route = Screen.ListScreen.route) {
             TvShowsListScreen(
                 state,
+                viewModel.error.collectAsStateWithLifecycle().value,
                 onShowClick = { tvShow ->
                     viewModel.onEvent(UiEvent.LoadTvShowDetails(tvShow))
                     navHostController.navigate(route = Screen.DetailScreen.route)

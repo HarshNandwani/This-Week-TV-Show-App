@@ -31,6 +31,9 @@ class TvShowViewModel @Inject constructor(
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state
 
+    private val _error = MutableStateFlow("")
+    val error: StateFlow<String> = _error
+
     private var searchedTvShowsJob: Job? = null
     private var loadDetailedTvShowJob: Job? = null
     private var loadSimilarTvShowsJob: Job? = null
@@ -50,6 +53,7 @@ class TvShowViewModel @Inject constructor(
                 }
                 loadDetailedTvShow(show = event.tvShow)
                 loadSimilarTvShows(show = event.tvShow)
+                _error.update { "" }
             }
 
             is UiEvent.OnFavorite -> {
@@ -149,6 +153,9 @@ class TvShowViewModel @Inject constructor(
                             metaData = it.metaData.copy(dataState = DataState.Success)
                         )
                     }
+
+                    if (data.loadedFrom == Source.LOCAL)
+                        _error.update { data.message }
                 }
                 .onFailure { exception ->
                     _state.update {
@@ -177,8 +184,9 @@ class TvShowViewModel @Inject constructor(
                         metaData = it.metaData.copy(searchedTvShowDataState = DataState.Success)
                     ) }
                 }
-                .onFailure {
+                .onFailure { exception ->
                     _state.update { it.copy(metaData = it.metaData.copy(searchedTvShowDataState = DataState.Failed)) }
+                    _error.update { exception.message ?: "cannot load search data" }
                 }
         }
     }

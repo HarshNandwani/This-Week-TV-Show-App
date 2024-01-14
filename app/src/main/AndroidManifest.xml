@@ -19,7 +19,8 @@
         <activity
             android:name=".presentation.TvShowActivity"
             android:exported="true"
-            android:theme="@style/Theme.ThisWeekTVShow">
+            android:theme="@style/Theme.ThisWeekTVShow"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

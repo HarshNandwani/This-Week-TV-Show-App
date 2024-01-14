@@ -24,6 +24,15 @@ class DefaultTvShowRepository(
     private val remoteDataSource: TheMovieDbApi
 ) : TvShowRepository {
 
+    /*
+    * Checks for internet connection
+    *  - if NOT connected
+    *       THEN Loads data from local source
+    *  - else (connected)
+    *       THEN load data from both. Remote data for latest trending and local data to see if favorites are added
+    *
+    * Proper handling in each failure cases!
+    * */
     override suspend fun getTrendingThisWeek(): Result<Data> = coroutineScope {
         val remoteDataResult: Result<List<TvShow>>
         val localDataResult: Result<List<TvShow>>
@@ -52,6 +61,7 @@ class DefaultTvShowRepository(
             when (remoteDataResult) {
                 is Result.Success -> {
                     val updatedTvShowsWithFavorites = inferFavoritesIfAny(localTvShows, remoteDataResult.data)
+                    // add these results to local db for caching
                     launch { remoteDataResult.data.forEach { localDataSource.addTvShow(it.toEntity()) } }
                     Result.Success(Data(updatedTvShowsWithFavorites, Source.REMOTE, "Successful load"))
                 }
@@ -74,6 +84,7 @@ class DefaultTvShowRepository(
         return if (response.isSuccessful) {
             val detailedTvShowDto = response.body() ?: return Result.Failure(Exception(response.exceptionMessage()))
             val detailedTvShow = detailedTvShowDto.toDomain()
+            // Check if this is added as favorite
             if (localDataSource.get(detailedTvShow.id)?.isFavorite == true) detailedTvShow.isFavorite = true
             Result.Success(detailedTvShow)
         } else {
@@ -151,6 +162,7 @@ class DefaultTvShowRepository(
         }
     }
 
+    //As favorites are persisted locally, here we take local and remote list and updated of shows are favorite in remote list
     private fun inferFavoritesIfAny(localList: List<TvShow>?, remoteList: List<TvShow>): List<TvShow> {
         val resultantList by lazy { remoteList.toMutableList() }
         localList?.forEach { localTvShow ->

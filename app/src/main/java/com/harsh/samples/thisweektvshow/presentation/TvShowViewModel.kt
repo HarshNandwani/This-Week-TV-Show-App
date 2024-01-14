@@ -41,34 +41,30 @@ class TvShowViewModel @Inject constructor(
     fun onEvent(event: UiEvent) {
         when(event) {
             is UiEvent.LoadTvShowDetails -> {
-                _state.value = _state.value.copy(
-                    metaData = _state.value.metaData.copy(detailedDataState = DataState.Loading)
-                )
+                _state.update { it.copy(metaData = it.metaData.copy(detailedDataState = DataState.Loading)) }
                 loadDetailedTvShow(show = event.tvShow)
                 loadSimilarTvShows(show = event.tvShow)
             }
 
             is UiEvent.OnFavorite -> {
                 val currentFavStatus = _state.value.detailedTvShow?.isFavorite ?: false
-                _state.value = _state.value.copy(
-                    detailedTvShow = _state.value.detailedTvShow?.copy(isFavorite = !currentFavStatus)
-                )
-                _state.value.data.tvShows.find { it.id == event.tvShow.id }?.isFavorite = !currentFavStatus
+                _state.update { it.copy(detailedTvShow = it.detailedTvShow?.copy(isFavorite = !currentFavStatus)) }
+                _state.value.trendingShowsData.tvShows.find { it.id == event.tvShow.id }?.isFavorite = !currentFavStatus
                 viewModelScope.launch { toggleShowFavorite(event.tvShow.id, !currentFavStatus) }
             }
 
             is UiEvent.OnSearchQueryChange -> {
-                _state.value = _state.value.copy(searchText = event.searchQuery, displayTvShows = emptyList())
+                _state.update { it.copy(searchText = event.searchQuery, displayTvShows = emptyList()) }
                 loadSearchedTvShows(event.searchQuery)
                 if (event.searchQuery.isBlank()) {
-                    _state.update { it.copy(displayTvShows = _state.value.data.tvShows) }
+                    _state.update { it.copy(displayTvShows = it.trendingShowsData.tvShows) }
                     searchedTvShowsJob?.cancel()
                 }
             }
 
             UiEvent.OnSearchClose -> {
                 // search is done return to viewing trending shows
-                _state.update { it.copy(displayTvShows = _state.value.data.tvShows, searchText = "") }
+                _state.update { it.copy(displayTvShows = it.trendingShowsData.tvShows, searchText = "") }
             }
         }
     }
@@ -78,21 +74,23 @@ class TvShowViewModel @Inject constructor(
         loadDetailedTvShowJob = viewModelScope.launch(Dispatchers.IO) {
             getShowDetails(show)
                 .onSuccess { detailedTvShow ->
-                    _state.value = _state.value.copy(
-                        //data = _state.value.data.map { if (it.id == show.id) detailedTvShow else it }
-                        detailedTvShow = detailedTvShow,
-                        metaData = _state.value.metaData.copy(detailedDataState = DataState.Success),
-                        displayTvShows = _state.value.data.tvShows,
-                        searchText = ""
-                    )
-                }
-                .onFailure {
-                    _state.value = _state.value.copy(
-                        metaData = MetaData(
-                            detailedDataState = DataState.Failed,
-                            message = it.message ?: "Something went wrong"
+                    _state.update {
+                        it.copy(
+                            detailedTvShow = detailedTvShow,
+                            metaData = it.metaData.copy(detailedDataState = DataState.Success),
+                            displayTvShows = it.trendingShowsData.tvShows
                         )
-                    )
+                    }
+                }
+                .onFailure { exception ->
+                    _state.update {
+                        it.copy(
+                            metaData = it.metaData.copy(
+                                detailedDataState = DataState.Failed,
+                                message = exception.message ?: "Something went wrong"
+                            )
+                        )
+                    }
                 }
         }
     }
@@ -102,41 +100,48 @@ class TvShowViewModel @Inject constructor(
         loadSimilarTvShowsJob = viewModelScope.launch(Dispatchers.IO) {
             getSimilarShows(show)
                 .onSuccess { similarTvShows ->
-                    _state.value = _state.value.copy(
-                        similarTvShows = similarTvShows,
-                        metaData = _state.value.metaData.copy(similarTvShowsDataState = DataState.Success)
-                    )
+                    _state.update {
+                        it.copy(
+                            similarTvShows = similarTvShows,
+                            metaData = it.metaData.copy(similarTvShowsDataState = DataState.Success)
+                        )
+                    }
                 }
-                .onFailure {
-                    //fixme: what if both loadDetailedTvShow and loadSimilarTvShows fail? there's only a single message
-                    _state.value.metaData = _state.value.metaData.copy(
-                        similarTvShowsDataState = DataState.Failed,
-                        message = it.message ?: "Something went wrong"
-                    )
+                .onFailure { exception ->
+                    _state.update {
+                        it.copy(
+                            it.metaData.copy(
+                                similarTvShowsDataState = DataState.Failed,
+                                message = exception.message ?: "Something went wrong"
+                            )
+                        )
+                    }
                 }
         }
     }
 
     private fun loadThisWeekTrendingTvShows() {
-        _state.value = _state.value.copy(
-            metaData = MetaData(dataState = DataState.Loading)
-        )
+        _state.update { it.copy(metaData = it.metaData.copy(dataState = DataState.Loading)) }
         viewModelScope.launch(Dispatchers.IO) {
             getThisWeekTrendingShows()
                 .onSuccess { data ->
-                    _state.value = _state.value.copy(
-                        data = data,
-                        displayTvShows = data.tvShows,
-                        metaData = MetaData(dataState = DataState.Success)
-                    )
-                }
-                .onFailure {
-                    _state.value = _state.value.copy(
-                        metaData = MetaData(
-                            dataState = DataState.Failed,
-                            message = it.message ?: "Something went wrong"
+                    _state.update {
+                        it.copy(
+                            trendingShowsData = data,
+                            displayTvShows = data.tvShows,
+                            metaData = it.metaData.copy(dataState = DataState.Success)
                         )
-                    )
+                    }
+                }
+                .onFailure { exception ->
+                    _state.update {
+                        it.copy(
+                            metaData = it.metaData.copy(
+                                dataState = DataState.Failed,
+                                message = exception.message ?: "Something went wrong"
+                            )
+                        )
+                    }
                 }
         }
     }
@@ -144,7 +149,7 @@ class TvShowViewModel @Inject constructor(
     private fun loadSearchedTvShows(searchQuery: String) {
         if(searchQuery.isBlank()) return
         searchedTvShowsJob?.cancel()
-        _state.update { it.copy(metaData = _state.value.metaData.copy(searchedTvShowDataState = DataState.Loading)) }
+        _state.update { it.copy(metaData = it.metaData.copy(searchedTvShowDataState = DataState.Loading)) }
         searchedTvShowsJob = viewModelScope.launch(Dispatchers.IO) {
             delay(1000) // wait for user to type
             getSearchedShows(searchQuery)
@@ -152,11 +157,11 @@ class TvShowViewModel @Inject constructor(
                     _state.update { it.copy(
                         searchedTvShows = searchedTvShows,
                         displayTvShows = searchedTvShows,
-                        metaData = _state.value.metaData.copy(searchedTvShowDataState = DataState.Success)
+                        metaData = it.metaData.copy(searchedTvShowDataState = DataState.Success)
                     ) }
                 }
                 .onFailure {
-                    _state.update { it.copy(metaData = _state.value.metaData.copy(searchedTvShowDataState = DataState.Failed)) }
+                    _state.update { it.copy(metaData = it.metaData.copy(searchedTvShowDataState = DataState.Failed)) }
                 }
         }
     }

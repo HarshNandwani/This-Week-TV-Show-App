@@ -35,7 +35,7 @@ fun TvShowsListScreen(state: UiState, onShowClick: (tvShow: TvShow) -> Unit) {
         }
 
         Success -> {
-            TvShowsGrid(shows = state.data.data, onShowClick = onShowClick)
+            TvShowsGrid(shows = state.data.tvShows, onShowClick = onShowClick)
         }
 
         Failed -> {

@@ -1,7 +1,7 @@
 package com.harsh.samples.thisweektvshow.domain.model
 
 data class Data(
-    val data: List<TvShow>,
+    val tvShows: List<TvShow>,
     val loadedFrom: Source,
     val message: String
 )

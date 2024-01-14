@@ -9,5 +9,5 @@ data class TvShow(
     val voteAvg: Float,
     val genres: List<String> = emptyList(),
     val seasons: List<TvShowSeason> = emptyList(),
-    val isFavorite: Boolean = false
+    var isFavorite: Boolean = false
 )

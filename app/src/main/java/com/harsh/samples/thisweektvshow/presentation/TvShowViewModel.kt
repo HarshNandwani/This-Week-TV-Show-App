@@ -3,6 +3,7 @@ package com.harsh.samples.thisweektvshow.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
+import com.harsh.samples.thisweektvshow.domain.use_case.GetSearchedShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetShowDetailsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetSimilarShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetThisWeekTrendingShowsUseCase
@@ -10,14 +11,17 @@ import com.harsh.samples.thisweektvshow.domain.use_case.ToggleShowFavoriteUseCas
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class TvShowViewModel @Inject constructor(
     private val getThisWeekTrendingShows: GetThisWeekTrendingShowsUseCase,
+    private val getSearchedShows: GetSearchedShowsUseCase,
     private val getShowDetails: GetShowDetailsUseCase,
     private val getSimilarShows: GetSimilarShowsUseCase,
     private val toggleShowFavorite: ToggleShowFavoriteUseCase
@@ -26,6 +30,7 @@ class TvShowViewModel @Inject constructor(
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state
 
+    private var searchedTvShowsJob: Job? = null
     private var loadDetailedTvShowJob: Job? = null
     private var loadSimilarTvShowsJob: Job? = null
 
@@ -53,10 +58,14 @@ class TvShowViewModel @Inject constructor(
             }
 
             is UiEvent.OnSearchQueryChange -> {
-                _state.value = _state.value.copy(searchText = event.searchQuery)
+                _state.value = _state.value.copy(searchText = event.searchQuery, displayTvShows = emptyList())
+                loadSearchedTvShows(event.searchQuery)
             }
 
-            UiEvent.OnSearchDone -> {  }
+            UiEvent.OnSearchClose -> {
+                // search is done return to viewing trending shows
+                _state.update { it.copy(displayTvShows = _state.value.data.tvShows, searchText = "") }
+            }
         }
     }
 
@@ -68,7 +77,9 @@ class TvShowViewModel @Inject constructor(
                     _state.value = _state.value.copy(
                         //data = _state.value.data.map { if (it.id == show.id) detailedTvShow else it }
                         detailedTvShow = detailedTvShow,
-                        metaData = _state.value.metaData.copy(detailedDataState = DataState.Success)
+                        metaData = _state.value.metaData.copy(detailedDataState = DataState.Success),
+                        displayTvShows = _state.value.data.tvShows,
+                        searchText = ""
                     )
                 }
                 .onFailure {
@@ -108,9 +119,10 @@ class TvShowViewModel @Inject constructor(
         )
         viewModelScope.launch(Dispatchers.IO) {
             getThisWeekTrendingShows()
-                .onSuccess { tvShows ->
+                .onSuccess { data ->
                     _state.value = _state.value.copy(
-                        data = tvShows,
+                        data = data,
+                        displayTvShows = data.tvShows,
                         metaData = MetaData(dataState = DataState.Success)
                     )
                 }
@@ -125,4 +137,23 @@ class TvShowViewModel @Inject constructor(
         }
     }
 
+    private fun loadSearchedTvShows(searchQuery: String) {
+        if(searchQuery.isBlank()) return
+        searchedTvShowsJob?.cancel()
+        _state.update { it.copy(metaData = _state.value.metaData.copy(searchedTvShowDataState = DataState.Loading)) }
+        searchedTvShowsJob = viewModelScope.launch(Dispatchers.IO) {
+            delay(1000) // wait for user to type
+            getSearchedShows(searchQuery)
+                .onSuccess { searchedTvShows ->
+                    _state.update { it.copy(
+                        searchedTvShows = searchedTvShows,
+                        displayTvShows = searchedTvShows,
+                        metaData = _state.value.metaData.copy(searchedTvShowDataState = DataState.Success)
+                    ) }
+                }
+                .onFailure {
+                    _state.update { it.copy(metaData = _state.value.metaData.copy(searchedTvShowDataState = DataState.Failed)) }
+                }
+        }
+    }
 }

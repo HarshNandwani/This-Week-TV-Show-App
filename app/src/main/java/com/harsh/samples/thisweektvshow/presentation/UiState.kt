@@ -6,7 +6,9 @@ import com.harsh.samples.thisweektvshow.domain.model.TvShow
 
 data class UiState(
     var metaData: MetaData = MetaData(),
+    val displayTvShows: List<TvShow> = emptyList(),
     val data: Data = Data(emptyList(), Source.NONE,""),
+    val searchedTvShows: List<TvShow> = emptyList(),
     val detailedTvShow: TvShow? = null,
     val similarTvShows: List<TvShow> = emptyList(),
     var searchText: String = ""
@@ -15,6 +17,7 @@ data class UiState(
 data class MetaData(
     val message: String? = null,
     val dataState: DataState = DataState.NotRequested,
+    val searchedTvShowDataState: DataState = DataState.NotRequested,
     val detailedDataState: DataState = DataState.NotRequested,
     val similarTvShowsDataState: DataState = DataState.NotRequested
 )

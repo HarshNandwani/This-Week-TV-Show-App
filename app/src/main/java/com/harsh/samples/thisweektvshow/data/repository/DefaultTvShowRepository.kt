@@ -74,7 +74,7 @@ class DefaultTvShowRepository(
         return if (response.isSuccessful) {
             val detailedTvShowDto = response.body() ?: return Result.Failure(Exception(response.exceptionMessage()))
             val detailedTvShow = detailedTvShowDto.toDomain()
-            if (localDataSource.get(detailedTvShow.id).isFavorite) detailedTvShow.isFavorite = true
+            if (localDataSource.get(detailedTvShow.id)?.isFavorite == true) detailedTvShow.isFavorite = true
             Result.Success(detailedTvShow)
         } else {
             Result.Failure(TvShowLoadException(response.exceptionMessage()))
@@ -82,7 +82,20 @@ class DefaultTvShowRepository(
     }
 
     override suspend fun getSearchedTvShows(query: String): Result<List<TvShow>> {
-        TODO("Not yet implemented")
+        val response = try {
+            remoteDataSource.getSearchedTvShows(query)
+        } catch (e: Exception) {
+            return Result.Failure(e)
+        }
+
+        return if (response.isSuccessful) {
+            val searchedTvShows = response.body()?.results ?: return Result.Failure(
+                TvShowLoadException(response.exceptionMessage())
+            )
+            Result.Success(searchedTvShows.map { it.toDomain() })
+        } else {
+            Result.Failure(TvShowLoadException(response.exceptionMessage()))
+        }
     }
 
     override suspend fun getSimilarTvShows(similarToShowId: Long): Result<List<TvShow>> {

@@ -18,7 +18,7 @@ interface TvShowDao {
     suspend fun getAll(): List<TvShowEntity>
 
     @Query("SELECT * FROM TvShowEntity WHERE id = :id")
-    suspend fun get(id: Long): TvShowEntity
+    suspend fun get(id: Long): TvShowEntity?
 
     @Update
     suspend fun update(tvShowEntity: TvShowEntity)

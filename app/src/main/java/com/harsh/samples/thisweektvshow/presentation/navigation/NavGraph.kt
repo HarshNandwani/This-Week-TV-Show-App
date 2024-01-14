@@ -29,8 +29,8 @@ fun NavGraph(
                 onSearchTextChange = { updatedSearchQuery ->
                     viewModel.onEvent(UiEvent.OnSearchQueryChange(updatedSearchQuery))
                 },
-                onSearchDone = {
-
+                onSearchClose = {
+                    viewModel.onEvent(UiEvent.OnSearchClose)
                 }
             )
         }

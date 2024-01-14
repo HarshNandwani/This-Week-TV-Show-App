@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 import com.harsh.samples.thisweektvshow.presentation.DataState.*
@@ -21,7 +22,7 @@ fun TvShowsListScreen(
     state: UiState,
     onShowClick: (tvShow: TvShow) -> Unit,
     onSearchTextChange: (String) -> Unit,
-    onSearchDone: () -> Unit
+    onSearchClose: () -> Unit
 ) {
     Log.d("Recomposition", "List screen ${state.metaData.dataState}")
     when (state.metaData.dataState) {
@@ -33,11 +34,11 @@ fun TvShowsListScreen(
 
         Success -> {
             TvShowsGrid(
-                shows = state.data.tvShows,
+                shows = state.displayTvShows,
                 onShowClick = onShowClick,
                 searchText = state.searchText,
                 onSearchTextChange = onSearchTextChange,
-                onSearchDone = onSearchDone
+                onSearchClose = onSearchClose
             )
         }
 
@@ -53,15 +54,19 @@ fun TvShowsGrid(
     onShowClick: (tvShow: TvShow) -> Unit,
     searchText: String,
     onSearchTextChange: (String) -> Unit,
-    onSearchDone: () -> Unit
+    onSearchClose: () -> Unit
 ) {
+
+    var title = remember { "Trending TV Shows" }
+
     Scaffold(
         topBar = {
             AppBarWithSearchView(
-                titleText = "Trending TV Shows",
+                titleText = title,
                 searchText = searchText,
                 onSearchTextChange = onSearchTextChange,
-                onSearchImeClicked = onSearchDone
+                onSearchImeClicked = { title = "$searchText search results" },
+                onCloseClicked = onSearchClose
             )
         }
     ) { paddingValues ->

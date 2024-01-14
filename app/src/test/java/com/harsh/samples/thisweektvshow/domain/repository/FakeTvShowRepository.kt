@@ -44,4 +44,8 @@ class FakeTvShowRepository : TvShowRepository {
         }
 
     }
+
+    override suspend fun toggleFavorite(tvShowId: Long, isFavorite: Boolean) {
+        tvShowList.find { it.id == tvShowId }?.isFavorite = isFavorite
+    }
 }

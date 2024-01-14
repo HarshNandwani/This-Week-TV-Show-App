@@ -6,6 +6,7 @@ import com.harsh.samples.thisweektvshow.domain.model.TvShow
 import com.harsh.samples.thisweektvshow.domain.use_case.GetShowDetailsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetSimilarShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetThisWeekTrendingShowsUseCase
+import com.harsh.samples.thisweektvshow.domain.use_case.ToggleShowFavoriteUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,7 +19,8 @@ import javax.inject.Inject
 class TvShowViewModel @Inject constructor(
     private val getThisWeekTrendingShows: GetThisWeekTrendingShowsUseCase,
     private val getShowDetails: GetShowDetailsUseCase,
-    private val getSimilarShows: GetSimilarShowsUseCase
+    private val getSimilarShows: GetSimilarShowsUseCase,
+    private val toggleShowFavorite: ToggleShowFavoriteUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState())
@@ -42,14 +44,15 @@ class TvShowViewModel @Inject constructor(
             }
 
             is UiEvent.OnFavorite -> {
-                if (event.tvShow.id == _state.value.detailedTvShow?.id)
-                    _state.value = _state.value.copy(
-                        detailedTvShow = _state.value.detailedTvShow?.copy(isFavorite = true)
-                    )
+                val currentFavStatus = _state.value.detailedTvShow?.isFavorite ?: false
+                _state.value = _state.value.copy(
+                    detailedTvShow = _state.value.detailedTvShow?.copy(isFavorite = !currentFavStatus)
+                )
+                _state.value.data.tvShows.find { it.id == event.tvShow.id }?.isFavorite = !currentFavStatus
+                viewModelScope.launch { toggleShowFavorite(event.tvShow.id, !currentFavStatus) }
             }
         }
     }
-
 
     private fun loadDetailedTvShow(show: TvShow) {
         loadDetailedTvShowJob?.cancel()

@@ -74,6 +74,7 @@ class DefaultTvShowRepository(
         return if (response.isSuccessful) {
             val detailedTvShowDto = response.body() ?: return Result.Failure(Exception(response.exceptionMessage()))
             val detailedTvShow = detailedTvShowDto.toDomain()
+            if (localDataSource.get(detailedTvShow.id).isFavorite) detailedTvShow.isFavorite = true
             Result.Success(detailedTvShow)
         } else {
             Result.Failure(TvShowLoadException(response.exceptionMessage()))
@@ -100,6 +101,10 @@ class DefaultTvShowRepository(
         } else {
             Result.Failure(TvShowLoadException(response.exceptionMessage()))
         }
+    }
+
+    override suspend fun toggleFavorite(tvShowId: Long, isFavorite: Boolean) {
+        localDataSource.markFavorite(tvShowId, isFavorite)
     }
 
     // Utility functions

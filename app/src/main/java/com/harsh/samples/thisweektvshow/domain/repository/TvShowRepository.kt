@@ -28,4 +28,9 @@ interface TvShowRepository {
     * Loads TV shows similar to the provided show id
     * */
     suspend fun getSimilarTvShows(similarToShowId: Long): Result<List<TvShow>>
+
+    /*
+    * Mark a tv show as favorite
+    * */
+    suspend fun toggleFavorite(tvShowId: Long, isFavorite: Boolean)
 }

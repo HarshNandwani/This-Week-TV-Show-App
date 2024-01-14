@@ -41,7 +41,8 @@ fun TvShowEntity.toDomain(): TvShow = TvShow(
     this.overview,
     this.posterUrl,
     this.backdropUrl,
-    this.voteAvg
+    this.voteAvg,
+    isFavorite = this.isFavorite
 )
 
 fun TvShow.toEntity() = TvShowEntity(

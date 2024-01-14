@@ -23,6 +23,10 @@ interface TvShowDao {
     @Update
     suspend fun update(tvShowEntity: TvShowEntity)
 
+    @Query("UPDATE TVSHOWENTITY SET isFavorite = :isFavorite WHERE id = :tvShowId")
+    suspend fun markFavorite(tvShowId: Long, isFavorite: Boolean)
+
+
     @Delete
     suspend fun delete(tvShowEntity: TvShowEntity)
 }

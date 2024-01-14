@@ -115,7 +115,7 @@ fun DetailedTvShowWithSeasons(tvShow: TvShow, similarShows: List<TvShow>, modifi
             LazyRow {
                 items(similarShows) { tvShow ->
                     //TODO: Improve UI
-                    SingleTvShow(tvShow = tvShow, onShowClick = {  })
+                    SingleTvShow(tvShow = tvShow, onShowClick = {  }, minimalView = true)
                 }
             }
             Spacer(modifier = Modifier.size(12.dp))

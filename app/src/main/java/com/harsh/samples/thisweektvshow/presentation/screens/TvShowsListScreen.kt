@@ -70,7 +70,7 @@ fun TvShowsGrid(
             )
         }
     ) { paddingValues ->
-        LazyVerticalGrid(columns = GridCells.Fixed(2), Modifier.padding(paddingValues)) {
+        LazyVerticalGrid(columns = GridCells.Fixed(3), Modifier.padding(paddingValues)) {
             items(shows) { show ->
                 SingleTvShow(tvShow = show, onShowClick = onShowClick)
             }

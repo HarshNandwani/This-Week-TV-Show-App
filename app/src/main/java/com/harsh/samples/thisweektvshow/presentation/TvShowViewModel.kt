@@ -60,6 +60,10 @@ class TvShowViewModel @Inject constructor(
             is UiEvent.OnSearchQueryChange -> {
                 _state.value = _state.value.copy(searchText = event.searchQuery, displayTvShows = emptyList())
                 loadSearchedTvShows(event.searchQuery)
+                if (event.searchQuery.isBlank()) {
+                    _state.update { it.copy(displayTvShows = _state.value.data.tvShows) }
+                    searchedTvShowsJob?.cancel()
+                }
             }
 
             UiEvent.OnSearchClose -> {

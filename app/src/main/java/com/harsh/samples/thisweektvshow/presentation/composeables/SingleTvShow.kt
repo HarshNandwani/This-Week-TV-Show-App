@@ -1,8 +1,10 @@
 package com.harsh.samples.thisweektvshow.presentation.composeables
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -26,8 +28,10 @@ import com.harsh.samples.thisweektvshow.domain.model.TvShow
 @Composable
 fun SingleTvShow(
     tvShow: TvShow,
-    onShowClick: (tvShow: TvShow) -> Unit
+    onShowClick: (tvShow: TvShow) -> Unit,
+    minimalView: Boolean = false
 ) {
+
     Card(
         modifier = Modifier.padding(4.dp),
         onClick = { onShowClick(tvShow) }
@@ -41,23 +45,12 @@ fun SingleTvShow(
             Spacer(modifier = Modifier.size(4.dp))
 
             Column(Modifier.padding(8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = tvShow.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                        modifier = Modifier.weight(if (tvShow.isFavorite) 6f else 100f)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    if (tvShow.isFavorite) {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Favorite",
-                            Modifier.size(14.dp)
-                        )
-                    }
-                }
+                Text(
+                    text = tvShow.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
+                )
 
                 Spacer(modifier = Modifier.size(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -67,8 +60,17 @@ fun SingleTvShow(
                         modifier = Modifier.size(12.dp)
                     )
                     Text(text = String.format("%.1f", tvShow.voteAvg), style = MaterialTheme.typography.bodySmall)
+                    if (tvShow.isFavorite)
+                        Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = "Favorite",
+                                Modifier.size(12.dp)
+                            )
+                        }
                 }
 
+                if (minimalView) return@Column
                 Spacer(modifier = Modifier.size(2.dp))
                 Text(text = tvShow.overview, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
             }
@@ -88,8 +90,9 @@ fun PreviewSingleTvShow() {
         "https://image.tmdb.org/t/p/w500/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
         "https://image.tmdb.org/t/p/w1280/rIe3PnM6S7IBUmvNwDkBMX0i9EZ.jpg",
         8.4f,
-        listOf("Drama", "Action & Adventure")
+        listOf("Drama", "Action & Adventure"),
+        isFavorite = true
     )
 
-    SingleTvShow(tvShow = gameOfThronesShow, onShowClick = {  })
+    SingleTvShow(tvShow = gameOfThronesShow, onShowClick = {  }, minimalView = true)
 }

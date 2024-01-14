@@ -28,7 +28,7 @@ fun SingleSeason(season: TvShowSeason) {
             )
             .padding(8.dp)
     ) {
-        Text(text = season.name)
+        Text(text = season.name, Modifier.weight(2f))
         Spacer(modifier = Modifier.weight(1f))
         Text(text = "${season.noOfEpisodes} episodes")
     }

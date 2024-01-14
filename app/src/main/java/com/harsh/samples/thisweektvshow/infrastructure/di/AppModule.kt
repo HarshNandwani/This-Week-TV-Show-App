@@ -74,8 +74,16 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideTvShowRepository(retrofit: Retrofit): TvShowRepository {
-        return DefaultTvShowRepository(retrofit.create(TheMovieDbApi::class.java))
+    fun provideTvShowRepository(
+        connectivityDataSource: ConnectivityDataSource,
+        db: TvShowDatabase,
+        retrofit: Retrofit
+    ): TvShowRepository {
+        return DefaultTvShowRepository(
+            connectivityDataSource,
+            db.tvShowDao,
+            retrofit.create(TheMovieDbApi::class.java)
+        )
     }
 
     @Provides

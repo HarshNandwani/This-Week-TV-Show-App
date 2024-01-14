@@ -46,10 +46,6 @@ class TvShowViewModel @Inject constructor(
                     _state.value = _state.value.copy(
                         detailedTvShow = _state.value.detailedTvShow?.copy(isFavorite = true)
                     )
-                // TODO: remove this manual update below once favorite is persisted in room db
-                _state.value = _state.value.copy(
-                    data = _state.value.data.map { if (it.id == event.tvShow.id) it.copy(isFavorite = true) else it }
-                )
             }
         }
     }

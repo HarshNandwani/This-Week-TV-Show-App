@@ -1,10 +1,12 @@
 package com.harsh.samples.thisweektvshow.presentation
 
+import com.harsh.samples.thisweektvshow.domain.model.Data
+import com.harsh.samples.thisweektvshow.domain.model.Source
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 
 data class UiState(
     var metaData: MetaData = MetaData(),
-    val data: List<TvShow> = emptyList(),
+    val data: Data = Data(emptyList(), Source.NONE,""),
     val detailedTvShow: TvShow? = null,
     val similarTvShows: List<TvShow> = emptyList()
 )

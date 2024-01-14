@@ -6,4 +6,4 @@ data class Data(
     val message: String
 )
 
-enum class Source { LOCAL, REMOTE }
+enum class Source { NONE, LOCAL, REMOTE }

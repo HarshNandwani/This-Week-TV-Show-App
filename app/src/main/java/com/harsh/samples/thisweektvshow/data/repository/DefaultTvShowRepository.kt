@@ -1,36 +1,66 @@
 package com.harsh.samples.thisweektvshow.data.repository
 
-import com.harsh.samples.thisweektvshow.data.remote.Constants.backdropBaseUrl
-import com.harsh.samples.thisweektvshow.data.remote.Constants.posterBaseUrl
+import com.harsh.samples.thisweektvshow.data.ConnectivityDataSource
+import com.harsh.samples.thisweektvshow.data.local.dao.TvShowDao
 import com.harsh.samples.thisweektvshow.data.remote.TheMovieDbApi
-import com.harsh.samples.thisweektvshow.data.remote.dto.DetailedTvShowDto
-import com.harsh.samples.thisweektvshow.data.remote.dto.TvShowDto
+import com.harsh.samples.thisweektvshow.domain.model.Data
 import com.harsh.samples.thisweektvshow.domain.model.Result
+import com.harsh.samples.thisweektvshow.domain.model.Source
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 import com.harsh.samples.thisweektvshow.domain.model.TvShowLoadException
-import com.harsh.samples.thisweektvshow.domain.model.TvShowSeason
 import com.harsh.samples.thisweektvshow.domain.repository.TvShowRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import retrofit2.Response
 
+/*
+* Used repository - datasource pattern
+* This class contains only data logic, no business logic allowed!
+* */
 class DefaultTvShowRepository(
-    //TODO: Add local data source for favorites and offline support.
+    private val connectivityDataSource: ConnectivityDataSource,
+    private val localDataSource: TvShowDao,
     private val remoteDataSource: TheMovieDbApi
 ) : TvShowRepository {
 
-    override suspend fun getTrendingThisWeek(): Result<List<TvShow>> {
-        val response = try {
-            remoteDataSource.getTrendingShowsThisWeek()
-        } catch (e: Exception) {
-            return Result.Failure(e)
-        }
+    override suspend fun getTrendingThisWeek(): Result<Data> = coroutineScope {
+        val remoteDataResult: Result<List<TvShow>>
+        val localDataResult: Result<List<TvShow>>
 
-        return if (response.isSuccessful) {
-            val tvShowsDto =
-                response.body()?.results ?: return Result.Failure(Exception(response.exceptionMessage()))
-            val tvShows = tvShowsDto.map { it.toDomain() }
-            Result.Success(tvShows)
+        val localDataJob = async { loadShowsLocal() }
+        if (!connectivityDataSource.isConnected()) {
+            localDataResult = localDataJob.await()
+            when (localDataResult) {
+                is Result.Success -> {
+                    Result.Success(Data(localDataResult.data, Source.LOCAL, "Data loaded from cache - no connection"))
+                }
+                is Result.Failure -> {
+                    Result.Failure(TvShowLoadException("No cache data and no internet connection"))
+                }
+            }
         } else {
-            Result.Failure(TvShowLoadException(response.exceptionMessage()))
+            val remoteDataJob = async { loadTrendingShowsRemote() }
+            remoteDataResult = remoteDataJob.await()
+            localDataResult = localDataJob.await()
+
+            val localTvShows = when (localDataResult) {
+                is Result.Success -> { localDataResult.data }
+                is Result.Failure -> { null }
+            }
+
+            when (remoteDataResult) {
+                is Result.Success -> {
+                    val updatedTvShowsWithFavorites = inferFavoritesIfAny(localTvShows, remoteDataResult.data)
+                    launch { remoteDataResult.data.forEach { localDataSource.addTvShow(it.toEntity()) } }
+                    Result.Success(Data(updatedTvShowsWithFavorites, Source.REMOTE, "Successful load"))
+                }
+                is Result.Failure -> {
+                    localTvShows?.let {
+                        Result.Success(Data(it, Source.LOCAL, "Data loaded from cache - Remote data load failed"))
+                    } ?: Result.Failure(TvShowLoadException("No cache data and remote data load failed"))
+                }
+            }
         }
     }
 
@@ -77,31 +107,39 @@ class DefaultTvShowRepository(
     private fun <T> Response<T>.exceptionMessage(): String =
         "${this.code()} - ${this.errorBody()?.string() ?: this.message()}"
 
-    private fun TvShowDto.toDomain(): TvShow = TvShow(
-        this.id,
-        this.name,
-        this.overview,
-        "$posterBaseUrl${this.posterPath}",
-        "$backdropBaseUrl${this.backdropPath}",
-        this.voteAverage,
-    )
-
-    private fun DetailedTvShowDto.toDomain(): TvShow = TvShow(
-        this.id,
-        this.name,
-        this.overview,
-        "$posterBaseUrl${this.posterPath}",
-        "$backdropBaseUrl${this.backdropPath}",
-        this.voteAverage,
-        this.genres.map { it.name },
-        this.seasons.map {
-            TvShowSeason(
-                it.id,
-                it.name,
-                it.episodeCount,
-                it.seasonNumber,
-                it.voteAverage
-            )
+    private suspend fun loadTrendingShowsRemote(): Result<List<TvShow>> {
+        val response = try {
+            remoteDataSource.getTrendingShowsThisWeek()
+        } catch (e: Exception) {
+            return Result.Failure(e)
         }
-    )
+
+        return if (response.isSuccessful) {
+            val tvShowsDto =
+                response.body()?.results ?: return Result.Failure(Exception(response.exceptionMessage()))
+            val tvShows = tvShowsDto.map { it.toDomain() }
+            Result.Success(tvShows)
+        } else {
+            Result.Failure(TvShowLoadException(response.exceptionMessage()))
+        }
+    }
+
+    private suspend fun loadShowsLocal(): Result<List<TvShow>> {
+        val tvShowEntities = localDataSource.getAll()
+        return if (tvShowEntities.isEmpty()) {
+            Result.Failure(TvShowLoadException("No data"))
+        } else {
+            Result.Success(tvShowEntities.map { it.toDomain() })
+        }
+    }
+
+    private fun inferFavoritesIfAny(localList: List<TvShow>?, remoteList: List<TvShow>): List<TvShow> {
+        val resultantList by lazy { remoteList.toMutableList() }
+        localList?.forEach { localTvShow ->
+            if (localTvShow.isFavorite) {
+                resultantList.find { remoteTvShow -> localTvShow.id == remoteTvShow.id }?.isFavorite = true
+            }
+        } ?: return remoteList
+        return resultantList
+    }
 }

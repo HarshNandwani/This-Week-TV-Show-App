@@ -9,6 +9,7 @@ import com.harsh.samples.thisweektvshow.domain.model.Source
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 import com.harsh.samples.thisweektvshow.domain.model.TvShowLoadException
 import com.harsh.samples.thisweektvshow.domain.repository.TvShowRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -21,7 +22,8 @@ import retrofit2.Response
 class DefaultTvShowRepository(
     private val connectivityDataSource: ConnectivityDataSource,
     private val localDataSource: TvShowDao,
-    private val remoteDataSource: TheMovieDbApi
+    private val remoteDataSource: TheMovieDbApi,
+    private val extCoroutineScope: CoroutineScope
 ) : TvShowRepository {
 
     /*
@@ -62,7 +64,9 @@ class DefaultTvShowRepository(
                 is Result.Success -> {
                     val updatedTvShowsWithFavorites = inferFavoritesIfAny(localTvShows, remoteDataResult.data)
                     // add these results to local db for caching
-                    launch { remoteDataResult.data.forEach { localDataSource.addTvShow(it.toEntity()) } }
+                    extCoroutineScope.launch(extCoroutineScope.coroutineContext) {
+                        remoteDataResult.data.forEach { localDataSource.addTvShow(it.toEntity()) }
+                    }
                     Result.Success(Data(updatedTvShowsWithFavorites, Source.REMOTE, "Successful load"))
                 }
                 is Result.Failure -> {

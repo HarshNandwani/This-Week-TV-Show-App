@@ -19,6 +19,9 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -83,7 +86,8 @@ object AppModule {
         return DefaultTvShowRepository(
             connectivityDataSource,
             db.tvShowDao,
-            retrofit.create(TheMovieDbApi::class.java)
+            retrofit.create(TheMovieDbApi::class.java),
+            CoroutineScope(SupervisorJob() + Dispatchers.IO)
         )
     }
 

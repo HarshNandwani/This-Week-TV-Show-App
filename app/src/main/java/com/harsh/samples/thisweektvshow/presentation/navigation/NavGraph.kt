@@ -40,7 +40,15 @@ fun NavGraph(
             TvShowDetailScreen(
                 state,
                 onFavorite = { viewModel.onEvent(UiEvent.OnFavorite(it)) } ,
-                onBackPress = { navHostController.popBackStack() })
+                onShowClick = { tvShow ->
+                    viewModel.onEvent(UiEvent.LoadTvShowDetails(tvShow))
+                    navHostController.navigate(route = Screen.DetailScreen.route)
+                },
+                onBackPress = {
+                    viewModel.onEvent(UiEvent.RetrieveLastDetailTvShow)
+                    navHostController.popBackStack()
+                },
+            )
         }
     }
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
@@ -38,7 +39,7 @@ fun SingleTvShow(
 ) {
 
     Card(
-        modifier = Modifier.padding(4.dp),
+        modifier = Modifier.padding(4.dp).widthIn(max = 100.dp),
         onClick = { onShowClick(tvShow) }
     ) {
         Column {
@@ -84,7 +85,7 @@ fun SingleTvShow(
                         }
                 }
 
-                if (minimalView) return@Column
+                if (minimalView) return@Card
                 Spacer(modifier = Modifier.size(2.dp))
                 Text(text = tvShow.overview, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
             }

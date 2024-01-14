@@ -34,6 +34,8 @@ class TvShowViewModel @Inject constructor(
     private val _error = MutableStateFlow("")
     val error: StateFlow<String> = _error
 
+    private var isRetrievingPreviousTvShows = false
+
     private var searchedTvShowsJob: Job? = null
     private var loadDetailedTvShowJob: Job? = null
     private var loadSimilarTvShowsJob: Job? = null
@@ -48,10 +50,12 @@ class TvShowViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         metaData = it.metaData.copy(detailedDataState = DataState.Loading),
-                        detailedTvShow = event.tvShow
+                        detailedTvShow = event.tvShow,
+                        searchText = "",
                     )
                 }
-                loadDetailedTvShow(show = event.tvShow)
+                if (event.newlyAdded) isRetrievingPreviousTvShows = false
+                loadDetailedTvShow(show = event.tvShow, newlyAdded = event.newlyAdded)
                 loadSimilarTvShows(show = event.tvShow)
                 _error.update { "" }
             }
@@ -87,10 +91,23 @@ class TvShowViewModel @Inject constructor(
                     _state.value.detailedTvShow?.let { onEvent(UiEvent.LoadTvShowDetails(it)) }
                 }
             }
+
+            UiEvent.RetrieveLastDetailTvShow -> {
+                if (!isRetrievingPreviousTvShows)
+                    _state.value.previousDetailTvShows.removeLast()
+                isRetrievingPreviousTvShows = true
+                val lastShow = _state.value.previousDetailTvShows.removeLastOrNull() ?: return
+                onEvent(
+                    UiEvent.LoadTvShowDetails(
+                        tvShow = lastShow,
+                        newlyAdded = false
+                    )
+                )
+            }
         }
     }
 
-    private fun loadDetailedTvShow(show: TvShow) {
+    private fun loadDetailedTvShow(show: TvShow, newlyAdded: Boolean = true) {
         loadDetailedTvShowJob?.cancel()
         loadDetailedTvShowJob = viewModelScope.launch(Dispatchers.IO) {
             getShowDetails(show)
@@ -102,6 +119,8 @@ class TvShowViewModel @Inject constructor(
                             displayTvShows = it.trendingShowsData.tvShows
                         )
                     }
+                    if (newlyAdded)
+                        _state.value.previousDetailTvShows.addLast(detailedTvShow)
                 }
                 .onFailure { exception ->
                     _state.update {

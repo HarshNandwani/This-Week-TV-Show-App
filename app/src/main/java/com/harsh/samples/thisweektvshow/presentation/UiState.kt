@@ -10,6 +10,7 @@ data class UiState(
     val trendingShowsData: Data = Data(emptyList(), Source.NONE,""),
     val searchedTvShows: List<TvShow> = emptyList(),
     val detailedTvShow: TvShow? = null,
+    val previousDetailTvShows: ArrayDeque<TvShow> = ArrayDeque(),
     val similarTvShows: List<TvShow> = emptyList(),
     var searchText: String = ""
 )

@@ -36,7 +36,12 @@ import com.harsh.samples.thisweektvshow.presentation.composeables.SingleTvShow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TvShowDetailScreen(state: UiState, onFavorite: (tvShow: TvShow) -> Unit, onBackPress: () -> Unit) {
+fun TvShowDetailScreen(
+    state: UiState,
+    onFavorite: (tvShow: TvShow) -> Unit,
+    onShowClick: (tvShow: TvShow) -> Unit,
+    onBackPress: () -> Unit
+) {
     Log.d("Recomposition", "Details screen ${state.metaData.detailedDataState}")
     when (state.metaData.detailedDataState) {
         NotRequested -> { return }
@@ -92,6 +97,7 @@ fun TvShowDetailScreen(state: UiState, onFavorite: (tvShow: TvShow) -> Unit, onB
         DetailedTvShowWithSeasons(
             tvShow = state.detailedTvShow,
             similarShows = state.similarTvShows,
+            onShowClick = onShowClick,
             modifier = Modifier.padding(paddingValues)
         )
     }
@@ -99,7 +105,12 @@ fun TvShowDetailScreen(state: UiState, onFavorite: (tvShow: TvShow) -> Unit, onB
 }
 
 @Composable
-fun DetailedTvShowWithSeasons(tvShow: TvShow, similarShows: List<TvShow>, modifier: Modifier = Modifier) {
+fun DetailedTvShowWithSeasons(
+    tvShow: TvShow,
+    similarShows: List<TvShow>,
+    onShowClick: (tvShow: TvShow) -> Unit,
+    modifier: Modifier = Modifier
+) {
     LazyColumn(modifier = modifier) {
         item {
             DetailedTvShow(tvShow = tvShow)
@@ -114,7 +125,7 @@ fun DetailedTvShowWithSeasons(tvShow: TvShow, similarShows: List<TvShow>, modifi
             Text(text = "Similar shows", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(16.dp))
             LazyRow {
                 items(similarShows) { tvShow ->
-                    SingleTvShow(tvShow = tvShow, onShowClick = {  }, minimalView = true)
+                    SingleTvShow(tvShow = tvShow, onShowClick = { onShowClick(it) }, minimalView = true)
                 }
             }
             Spacer(modifier = Modifier.size(12.dp))
@@ -151,5 +162,9 @@ fun PreviewTvShowDetailScreen() {
         )
     )
 
-    TvShowDetailScreen(UiState(detailedTvShow = gameOfThronesShow), onFavorite = { },onBackPress = { })
+    TvShowDetailScreen(
+        UiState(detailedTvShow = gameOfThronesShow),
+        onFavorite = { },
+        onShowClick = { },
+        onBackPress = { })
 }

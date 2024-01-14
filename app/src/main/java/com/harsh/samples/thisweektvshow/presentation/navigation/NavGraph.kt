@@ -25,6 +25,12 @@ fun NavGraph(
                 onShowClick = { tvShow ->
                     viewModel.onEvent(UiEvent.LoadTvShowDetails(tvShow))
                     navHostController.navigate(route = Screen.DetailScreen.route)
+                },
+                onSearchTextChange = { updatedSearchQuery ->
+                    viewModel.onEvent(UiEvent.OnSearchQueryChange(updatedSearchQuery))
+                },
+                onSearchDone = {
+
                 }
             )
         }

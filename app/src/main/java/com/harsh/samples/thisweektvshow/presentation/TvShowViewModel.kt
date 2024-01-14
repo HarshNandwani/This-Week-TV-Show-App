@@ -51,6 +51,12 @@ class TvShowViewModel @Inject constructor(
                 _state.value.data.tvShows.find { it.id == event.tvShow.id }?.isFavorite = !currentFavStatus
                 viewModelScope.launch { toggleShowFavorite(event.tvShow.id, !currentFavStatus) }
             }
+
+            is UiEvent.OnSearchQueryChange -> {
+                _state.value = _state.value.copy(searchText = event.searchQuery)
+            }
+
+            UiEvent.OnSearchDone -> {  }
         }
     }
 

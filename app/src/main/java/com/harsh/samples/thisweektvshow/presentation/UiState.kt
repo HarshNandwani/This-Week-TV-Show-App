@@ -8,7 +8,8 @@ data class UiState(
     var metaData: MetaData = MetaData(),
     val data: Data = Data(emptyList(), Source.NONE,""),
     val detailedTvShow: TvShow? = null,
-    val similarTvShows: List<TvShow> = emptyList()
+    val similarTvShows: List<TvShow> = emptyList(),
+    var searchText: String = ""
 )
 
 data class MetaData(

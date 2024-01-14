@@ -36,4 +36,10 @@ class TvShowActivity : ComponentActivity() {
             }
         }
     }
+
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.onEvent(UiEvent.Refresh)
+    }
 }

@@ -2,6 +2,7 @@ package com.harsh.samples.thisweektvshow.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.harsh.samples.thisweektvshow.domain.model.Source
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 import com.harsh.samples.thisweektvshow.domain.use_case.GetSearchedShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetShowDetailsUseCase
@@ -41,7 +42,12 @@ class TvShowViewModel @Inject constructor(
     fun onEvent(event: UiEvent) {
         when(event) {
             is UiEvent.LoadTvShowDetails -> {
-                _state.update { it.copy(metaData = it.metaData.copy(detailedDataState = DataState.Loading)) }
+                _state.update {
+                    it.copy(
+                        metaData = it.metaData.copy(detailedDataState = DataState.Loading),
+                        detailedTvShow = event.tvShow
+                    )
+                }
                 loadDetailedTvShow(show = event.tvShow)
                 loadSimilarTvShows(show = event.tvShow)
             }
@@ -65,6 +71,17 @@ class TvShowViewModel @Inject constructor(
             UiEvent.OnSearchClose -> {
                 // search is done return to viewing trending shows
                 _state.update { it.copy(displayTvShows = it.trendingShowsData.tvShows, searchText = "") }
+            }
+
+            UiEvent.Refresh -> {
+                // Refresh if needed.
+                if (_state.value.trendingShowsData.loadedFrom != Source.REMOTE) {
+                    loadThisWeekTrendingTvShows()
+                }
+
+                if (_state.value.metaData.detailedDataState == DataState.Failed) {
+                    _state.value.detailedTvShow?.let { onEvent(UiEvent.LoadTvShowDetails(it)) }
+                }
             }
         }
     }

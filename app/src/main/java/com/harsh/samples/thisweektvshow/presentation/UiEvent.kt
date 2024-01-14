@@ -7,4 +7,5 @@ sealed interface UiEvent {
     data class OnFavorite(val tvShow: TvShow) : UiEvent
     data class OnSearchQueryChange(val searchQuery: String) : UiEvent
     data object OnSearchClose : UiEvent
+    data object Refresh : UiEvent
 }

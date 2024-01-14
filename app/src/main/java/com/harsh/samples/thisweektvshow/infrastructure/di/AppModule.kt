@@ -3,6 +3,8 @@ package com.harsh.samples.thisweektvshow.infrastructure.di
 import android.app.Application
 import androidx.room.Room
 import com.harsh.samples.thisweektvshow.BuildConfig
+import com.harsh.samples.thisweektvshow.data.ConnectivityDataSource
+import com.harsh.samples.thisweektvshow.data.InternalConnectivityManager
 import com.harsh.samples.thisweektvshow.data.local.TvShowDatabase
 import com.harsh.samples.thisweektvshow.data.remote.Constants
 import com.harsh.samples.thisweektvshow.data.remote.TheMovieDbApi
@@ -62,6 +64,12 @@ object AppModule {
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideConnectivityDataSource(app: Application): ConnectivityDataSource {
+        return InternalConnectivityManager(app)
     }
 
     @Provides

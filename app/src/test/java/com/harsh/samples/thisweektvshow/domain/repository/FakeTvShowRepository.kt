@@ -1,20 +1,22 @@
 package com.harsh.samples.thisweektvshow.domain.repository
 
+import com.harsh.samples.thisweektvshow.domain.model.Data
 import com.harsh.samples.thisweektvshow.domain.model.Result
+import com.harsh.samples.thisweektvshow.domain.model.Source
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 import com.harsh.samples.thisweektvshow.domain.model.TvShowSeason
 
 class FakeTvShowRepository : TvShowRepository {
 
     private val tvShowList = listOf(
-        TvShow(1, "First Show", "Xyz xyz xyz", "example.com/xyz1.jpg", 8.1f),
-        TvShow(2, "Second Show", "Xyz xyz xyz", "example.com/xyz2.jpg", 8.2f),
-        TvShow(3, "Third Show", "Xyz xyz xyz", "example.com/xyz3.jpg", 8.3f),
-        TvShow(4, "Forth Show", "Xyz xyz xyz", "example.com/xyz4.jpg", 8.4f),
+        TvShow(1, "First Show", "Xyz xyz xyz", "example.com/xyz1.jpg", "", 8.1f),
+        TvShow(2, "Second Show", "Xyz xyz xyz", "example.com/xyz2.jpg","",8.2f),
+        TvShow(3, "Third Show", "Xyz xyz xyz", "example.com/xyz3.jpg", "",8.3f),
+        TvShow(4, "Forth Show", "Xyz xyz xyz", "example.com/xyz4.jpg", "",8.4f),
     )
 
-    override suspend fun getTrendingThisWeek(): Result<List<TvShow>> {
-        return Result.Success(tvShowList)
+    override suspend fun getTrendingThisWeek(): Result<Data> {
+        return Result.Success(Data(tvShowList, Source.REMOTE, "Successful load"))
     }
 
     override suspend fun getTvShowDetails(tvShow: TvShow): Result<TvShow> {

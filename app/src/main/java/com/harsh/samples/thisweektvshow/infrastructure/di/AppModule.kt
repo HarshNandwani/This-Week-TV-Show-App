@@ -1,6 +1,9 @@
 package com.harsh.samples.thisweektvshow.infrastructure.di
 
+import android.app.Application
+import androidx.room.Room
 import com.harsh.samples.thisweektvshow.BuildConfig
+import com.harsh.samples.thisweektvshow.data.local.TvShowDatabase
 import com.harsh.samples.thisweektvshow.data.remote.Constants
 import com.harsh.samples.thisweektvshow.data.remote.TheMovieDbApi
 import com.harsh.samples.thisweektvshow.data.repository.DefaultTvShowRepository
@@ -23,6 +26,16 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideTvShowDatabase(app: Application): TvShowDatabase {
+        return Room.databaseBuilder(
+            app,
+            TvShowDatabase::class.java,
+            TvShowDatabase.DATABASE_NAME
+        ).build()
+    }
 
     @Provides
     @Singleton

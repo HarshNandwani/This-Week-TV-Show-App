@@ -18,6 +18,18 @@ import retrofit2.Response
 /*
 * Used repository - datasource pattern
 * This class contains only data logic, no business logic allowed!
+*
+* [Implementation Details] I have made this repository to be single source of truth - it might take little longer to
+* load data but the returned data would be inclusive of everything the ui/presentation might need.
+* ex: Repository takes case of inferring previously added favorites in local and apply them to new data from remote.
+*
+* For faster load times we can implement certain logic in ViewModel.
+* ex: ViewModel loads remote data first and displays it ASAP, then loads local data to later show favorites in UI
+*
+* I have chosen the first approach for several reasons:
+* - Dealing with relatively low amount of data.
+* - load time from API is fast and given low amount of data and less columns the room data loading is also quicker.
+* - its a sample app, won't be used by end user also this implementation is a bit easier.
 * */
 class DefaultTvShowRepository(
     private val connectivityDataSource: ConnectivityDataSource,
@@ -27,6 +39,7 @@ class DefaultTvShowRepository(
 ) : TvShowRepository {
 
     /*
+    * Loads trending tv shows with basic caching
     * Checks for internet connection
     *  - if NOT connected
     *       THEN Loads data from local source
@@ -34,6 +47,10 @@ class DefaultTvShowRepository(
     *       THEN load data from both. Remote data for latest trending and local data to see if favorites are added
     *
     * Proper handling in each failure cases!
+    *
+    * [Implementation Details] used a very basic caching strategy for the purpose of assignment.
+    * For real apps / If there's more time - a more sophisticated caching mechanism can be implemented
+    * for ex: If cache is older than x days/requests we could delete it to keep load times faster!
     * */
     override suspend fun getTrendingThisWeek(): Result<Data> = coroutineScope {
         val remoteDataResult: Result<List<TvShow>>

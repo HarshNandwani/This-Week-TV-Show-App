@@ -113,7 +113,12 @@ class DefaultTvShowRepository(
         }
         return when (val remoteDataResult = loadTrendingShowsRemote()) {
             // We have to query again for favorites. Its much easier to maintain a list of favorite show IDs
-            is Result.Success -> Result.Success(inferFavoritesIfAny(loadFavoriteShowsLocal(), remoteDataResult.data))
+            is Result.Success -> {
+                extCoroutineScope.launch(extCoroutineScope.coroutineContext) {
+                    remoteDataResult.data.forEach { localDataSource.addTvShow(it.toEntity()) }
+                }
+                return Result.Success(inferFavoritesIfAny(loadFavoriteShowsLocal(), remoteDataResult.data))
+            }
             is Result.Failure -> Result.Failure(remoteDataResult.exception)
         }
     }

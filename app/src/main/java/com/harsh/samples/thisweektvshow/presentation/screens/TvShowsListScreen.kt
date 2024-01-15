@@ -13,6 +13,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -74,6 +75,7 @@ fun TvShowsGrid(
     val coroutineScope = rememberCoroutineScope()
 
     val lazyGridState = rememberLazyGridState()
+    val firstVisibleItemIndex = remember { derivedStateOf { lazyGridState.firstVisibleItemIndex }  }
 
     Scaffold(
         topBar = {
@@ -116,7 +118,7 @@ fun TvShowsGrid(
         }
     }
 
-    if (lazyGridState.firstVisibleItemIndex >= state.displayTvShows.size - 9) {
+    if (firstVisibleItemIndex.value >= state.displayTvShows.size - 9) {
         loadMoreShows()
     }
 }

@@ -28,7 +28,7 @@ data class TvShowDto(
     @SerializedName("popularity")
     val popularity: Float,
     @SerializedName("poster_path")
-    val posterPath: String,
+    val posterPath: String?,
     @SerializedName("vote_average")
     val voteAverage: Float,
     @SerializedName("vote_count")

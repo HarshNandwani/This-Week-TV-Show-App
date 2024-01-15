@@ -125,7 +125,7 @@ fun DetailedTvShowWithSeasons(
             Text(text = "Similar shows", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(16.dp))
             LazyRow {
                 items(similarShows) { tvShow ->
-                    SingleTvShow(tvShow = tvShow, onShowClick = { onShowClick(it) }, minimalView = true)
+                    SingleTvShow(tvShow = tvShow, onShowClick = { onShowClick(it) })
                 }
             }
             Spacer(modifier = Modifier.size(12.dp))

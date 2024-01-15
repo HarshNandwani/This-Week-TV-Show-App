@@ -34,8 +34,7 @@ import com.harsh.samples.thisweektvshow.domain.model.TvShow
 @Composable
 fun SingleTvShow(
     tvShow: TvShow,
-    onShowClick: (tvShow: TvShow) -> Unit,
-    minimalView: Boolean = false
+    onShowClick: (tvShow: TvShow) -> Unit
 ) {
 
     Card(
@@ -84,10 +83,6 @@ fun SingleTvShow(
                             )
                         }
                 }
-
-                if (minimalView) return@Card
-                Spacer(modifier = Modifier.size(2.dp))
-                Text(text = tvShow.overview, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
             }
 
         }
@@ -109,5 +104,5 @@ fun PreviewSingleTvShow() {
         isFavorite = true
     )
 
-    SingleTvShow(tvShow = gameOfThronesShow, onShowClick = {  }, minimalView = true)
+    SingleTvShow(tvShow = gameOfThronesShow, onShowClick = {  })
 }

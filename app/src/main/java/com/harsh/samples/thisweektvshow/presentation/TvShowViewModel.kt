@@ -47,7 +47,7 @@ class TvShowViewModel @Inject constructor(
     fun onEvent(event: UiEvent) {
         when(event) {
             UiEvent.LoadMoreTrendingTvShows -> {
-                if (!isLoadingMoreShows)
+                if (!isLoadingMoreShows && _state.value.searchText.isEmpty())
                     loadMoreTrendingTvShows()
             }
 
@@ -195,6 +195,7 @@ class TvShowViewModel @Inject constructor(
     }
 
     private fun loadMoreTrendingTvShows() {
+        println("VM:: LOAD MORE TRENDING")
         isLoadingMoreShows = true
         _state.update { it.copy(metaData = it.metaData.copy(moreTvShowsDataState = DataState.Loading)) }
         viewModelScope.launch(Dispatchers.IO) {

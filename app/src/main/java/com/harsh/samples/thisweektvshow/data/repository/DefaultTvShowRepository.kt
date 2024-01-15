@@ -111,7 +111,11 @@ class DefaultTvShowRepository(
         if (!connectivityDataSource.isConnected()) {
             return Result.Failure(TvShowLoadException("Cannot load more shows, no internet connection"))
         }
-        return loadTrendingShowsRemote()
+        return when (val remoteDataResult = loadTrendingShowsRemote()) {
+            // We have to query again for favorites. Its much easier to maintain a list of favorite show IDs
+            is Result.Success -> Result.Success(inferFavoritesIfAny(loadFavoriteShowsLocal(), remoteDataResult.data))
+            is Result.Failure -> Result.Failure(remoteDataResult.exception)
+        }
     }
 
     override suspend fun getTvShowDetails(tvShow: TvShow): Result<TvShow> {
@@ -144,9 +148,9 @@ class DefaultTvShowRepository(
         }
 
         return if (response.isSuccessful) {
-            val searchedTvShowsDto = response.body()?.results ?: return Result.Failure(
-                TvShowLoadException(response.exceptionMessage())
-            )
+            val tvShowResponseDto = response.body()
+                ?: return Result.Failure(TvShowLoadException(response.exceptionMessage()))
+            val searchedTvShowsDto = tvShowResponseDto.results.filter { it.posterPath != null }
             val searchedTvShows = searchedTvShowsDto.map { it.toDomain() }
             // add tv shows to local
             extCoroutineScope.launch(extCoroutineScope.coroutineContext) {
@@ -172,7 +176,7 @@ class DefaultTvShowRepository(
             val tvShowsDto =
                 response.body()?.results
                     ?: return Result.Failure(Exception(response.exceptionMessage()))
-            val tvShows = tvShowsDto.map { it.toDomain() }
+            val tvShows = tvShowsDto.filter { it.posterPath != null }.map { it.toDomain() }
             Result.Success(tvShows)
         } else {
             Result.Failure(TvShowLoadException(response.exceptionMessage()))

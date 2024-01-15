@@ -26,6 +26,7 @@ import com.harsh.samples.thisweektvshow.presentation.composeables.CircularProgre
 import com.harsh.samples.thisweektvshow.presentation.composeables.ErrorText
 import com.harsh.samples.thisweektvshow.presentation.composeables.SingleTvShow
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 @Composable
 fun TvShowsListScreen(
@@ -94,7 +95,24 @@ fun TvShowsGrid(
             state = lazyGridState,
             modifier = Modifier.padding(paddingValues)
         ) {
-            items(items = state.displayTvShows, key = { it.id }) { show ->
+            items(
+                items = state.displayTvShows,
+                key = { tvShow ->
+                    /*
+                    * Temporary work around, the api is sending below shows in multiple pages, this is an issue at API end.
+                    * duplicate keys aren't allowed so using random.
+                    * If random is used as key everytime the scrolling is not smooth, hence this!
+                    *
+                    * I have handled up-to page 20, if app crashes after loading 20 pages its definitely because API is
+                    * sending shows again in multiple pages.
+                    * */
+                    val duplicateShowIds = listOf(12971L, 1402L, 46298L, 3034L, 62745L, 78102L)
+                    if (tvShow.id in duplicateShowIds)
+                        Random.nextInt()
+                    else
+                        tvShow.id
+                }
+            ) { show ->
                 SingleTvShow(tvShow = show, onShowClick = onShowClick)
             }
 

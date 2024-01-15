@@ -5,14 +5,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
 import com.harsh.samples.thisweektvshow.presentation.DataState.*
 import com.harsh.samples.thisweektvshow.presentation.UiState
@@ -26,6 +30,7 @@ import kotlinx.coroutines.launch
 fun TvShowsListScreen(
     state: UiState,
     error: String,
+    loadMoreShows: () -> Unit,
     onShowClick: (tvShow: TvShow) -> Unit,
     onSearchTextChange: (String) -> Unit,
     onSearchClose: () -> Unit
@@ -40,12 +45,12 @@ fun TvShowsListScreen(
 
         Success -> {
             TvShowsGrid(
-                shows = state.displayTvShows,
+                state = state,
+                error = error,
+                loadMoreShows = loadMoreShows,
                 onShowClick = onShowClick,
-                searchText = state.searchText,
                 onSearchTextChange = onSearchTextChange,
-                onSearchClose = onSearchClose,
-                error
+                onSearchClose = onSearchClose
             )
         }
 
@@ -57,33 +62,49 @@ fun TvShowsListScreen(
 
 @Composable
 fun TvShowsGrid(
-    shows: List<TvShow>,
+    state: UiState,
+    error: String,
+    loadMoreShows: () -> Unit,
     onShowClick: (tvShow: TvShow) -> Unit,
-    searchText: String,
     onSearchTextChange: (String) -> Unit,
     onSearchClose: () -> Unit,
-    error: String
 ) {
 
     val snackBarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    var title = remember { "Trending TV Shows" }
+
+    val lazyGridState = rememberLazyGridState()
 
     Scaffold(
         topBar = {
             AppBarWithSearchView(
-                titleText = title,
-                searchText = searchText,
+                titleText = "Trending TV Shows",
+                searchText = state.searchText,
                 onSearchTextChange = onSearchTextChange,
-                onSearchImeClicked = { title = "$searchText search results" },
+                onSearchImeClicked = {  },
                 onCloseClicked = onSearchClose
             )
         },
         snackbarHost = { SnackbarHost(snackBarHostState) },
     ) { paddingValues ->
-        LazyVerticalGrid(columns = GridCells.Fixed(3), Modifier.padding(paddingValues)) {
-            items(shows) { show ->
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            state = lazyGridState,
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            items(state.displayTvShows) { show ->
                 SingleTvShow(tvShow = show, onShowClick = onShowClick)
+            }
+
+            item {
+                when (state.metaData.moreTvShowsDataState) {
+                    NotRequested ->  {  }
+                    Loading -> { CircularProgressIndicator() }
+                    Success -> { /*do nothing*/ }
+                    Failed -> {
+                        Text(text = state.metaData.message ?: "Cannot load more shows", color = Color.Red)
+                    }
+                }
             }
         }
     }
@@ -95,4 +116,7 @@ fun TvShowsGrid(
         }
     }
 
+    if (lazyGridState.firstVisibleItemIndex >= state.displayTvShows.size - 9) {
+        loadMoreShows()
+    }
 }

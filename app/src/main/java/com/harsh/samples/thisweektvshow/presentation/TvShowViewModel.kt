@@ -8,6 +8,7 @@ import com.harsh.samples.thisweektvshow.domain.use_case.GetSearchedShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetShowDetailsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetSimilarShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetThisWeekTrendingShowsUseCase
+import com.harsh.samples.thisweektvshow.domain.use_case.LoadMoreTrendingShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.ToggleShowFavoriteUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import okhttp3.internal.toImmutableList
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,7 +27,8 @@ class TvShowViewModel @Inject constructor(
     private val getSearchedShows: GetSearchedShowsUseCase,
     private val getShowDetails: GetShowDetailsUseCase,
     private val getSimilarShows: GetSimilarShowsUseCase,
-    private val toggleShowFavorite: ToggleShowFavoriteUseCase
+    private val toggleShowFavorite: ToggleShowFavoriteUseCase,
+    private val loadMoreTrendingShows: LoadMoreTrendingShowsUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState())
@@ -35,17 +38,19 @@ class TvShowViewModel @Inject constructor(
     val error: StateFlow<String> = _error
 
     private var isRetrievingPreviousTvShows = false
+    private var isLoadingMoreShows = false
 
     private var searchedTvShowsJob: Job? = null
     private var loadDetailedTvShowJob: Job? = null
     private var loadSimilarTvShowsJob: Job? = null
 
-    init {
-        loadThisWeekTrendingTvShows()
-    }
-
     fun onEvent(event: UiEvent) {
         when(event) {
+            UiEvent.LoadMoreTrendingTvShows -> {
+                if (!isLoadingMoreShows)
+                    loadMoreTrendingTvShows()
+            }
+
             is UiEvent.LoadTvShowDetails -> {
                 _state.update {
                     it.copy(
@@ -182,6 +187,37 @@ class TvShowViewModel @Inject constructor(
                             metaData = it.metaData.copy(
                                 dataState = DataState.Failed,
                                 message = exception.message ?: "Something went wrong"
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun loadMoreTrendingTvShows() {
+        isLoadingMoreShows = true
+        _state.update { it.copy(metaData = it.metaData.copy(moreTvShowsDataState = DataState.Loading)) }
+        viewModelScope.launch(Dispatchers.IO) {
+            loadMoreTrendingShows()
+                .onSuccess { data ->
+                    isLoadingMoreShows = false
+                    val updatedTrendingShowsList = _state.value.trendingShowsData.tvShows.toMutableList()
+                    updatedTrendingShowsList.addAll(data)
+                    _state.update {
+                        it.copy(
+                            trendingShowsData = it.trendingShowsData.copy(tvShows = updatedTrendingShowsList.toImmutableList()),
+                            displayTvShows = it.trendingShowsData.tvShows,
+                            metaData = it.metaData.copy(moreTvShowsDataState = DataState.Success)
+                        )
+                    }
+                }
+                .onFailure { exception ->
+                    isLoadingMoreShows = false
+                    _state.update {
+                        it.copy(
+                            metaData = it.metaData.copy(
+                                moreTvShowsDataState = DataState.Failed,
+                                message = exception.message
                             )
                         )
                     }

@@ -18,6 +18,7 @@ data class UiState(
 data class MetaData(
     val message: String? = null,
     val dataState: DataState = DataState.NotRequested,
+    val moreTvShowsDataState: DataState = DataState.NotRequested,
     val searchedTvShowDataState: DataState = DataState.NotRequested,
     val detailedDataState: DataState = DataState.NotRequested,
     val similarTvShowsDataState: DataState = DataState.NotRequested

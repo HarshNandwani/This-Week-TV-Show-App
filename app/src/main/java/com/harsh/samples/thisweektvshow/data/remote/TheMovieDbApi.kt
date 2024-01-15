@@ -9,7 +9,7 @@ import retrofit2.http.Query
 
 interface TheMovieDbApi {
     @GET("/3/trending/tv/week")
-    suspend fun getTrendingShowsThisWeek(): Response<TvShowsResponseDto>
+    suspend fun getTrendingShowsThisWeek(@Query("page") page: Int = 1): Response<TvShowsResponseDto>
 
     @GET("/3/tv/{id}")
     suspend fun getTvShowDetails(@Path("id") showId: Long): Response<DetailedTvShowDto>

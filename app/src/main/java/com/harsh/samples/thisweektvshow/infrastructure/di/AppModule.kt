@@ -14,6 +14,7 @@ import com.harsh.samples.thisweektvshow.domain.use_case.GetSearchedShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetShowDetailsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetSimilarShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetThisWeekTrendingShowsUseCase
+import com.harsh.samples.thisweektvshow.domain.use_case.LoadMoreTrendingShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.ToggleShowFavoriteUseCase
 import dagger.Module
 import dagger.Provides
@@ -119,5 +120,11 @@ object AppModule {
     @Singleton
     fun provideToggleShowFavoriteUseCase(repository: TvShowRepository): ToggleShowFavoriteUseCase {
         return ToggleShowFavoriteUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLoadMoreTrendingShowsUseCase(repository: TvShowRepository): LoadMoreTrendingShowsUseCase {
+        return LoadMoreTrendingShowsUseCase(repository)
     }
 }

@@ -39,6 +39,16 @@ class DefaultTvShowRepository(
 ) : TvShowRepository {
 
     /*
+    * [Implementation Details] implementing manual paging.
+    *
+    * The android paging library requires us to use PagingData<> as a wrapper. Its not clean architecture friendly
+    * coz we can't use it in domain layer and we do not want presentation to access data layer directly.
+    * If android paging library is used we need additional work of converting PagingData<> to a plain data class.
+    * */
+    private var pageToLoad = 1
+    private var totalPages: Int = 0
+
+    /*
     * Loads trending tv shows with basic caching
     * Checks for internet connection
     *  - if NOT connected
@@ -95,6 +105,13 @@ class DefaultTvShowRepository(
                 }
             }
         }
+    }
+
+    override suspend fun loadMoreTrending(): Result<List<TvShow>> {
+        if (!connectivityDataSource.isConnected()) {
+            return Result.Failure(TvShowLoadException("Cannot load more shows, no internet connection"))
+        }
+        return loadTrendingShowsRemote()
     }
 
     override suspend fun getTvShowDetails(tvShow: TvShow): Result<TvShow> {
@@ -173,15 +190,16 @@ class DefaultTvShowRepository(
 
     private suspend fun loadTrendingShowsRemote(): Result<List<TvShow>> {
         val response = try {
-            remoteDataSource.getTrendingShowsThisWeek()
+            remoteDataSource.getTrendingShowsThisWeek(pageToLoad)
         } catch (e: Exception) {
             return Result.Failure(e)
         }
 
         return if (response.isSuccessful) {
-            val tvShowsDto =
-                response.body()?.results ?: return Result.Failure(Exception(response.exceptionMessage()))
-            val tvShows = tvShowsDto.map { it.toDomain() }
+            val tvShowsResponseDto = response.body() ?: return Result.Failure(Exception(response.exceptionMessage()))
+            totalPages = tvShowsResponseDto.totalPages
+            pageToLoad = tvShowsResponseDto.page + 1
+            val tvShows = tvShowsResponseDto.results.map { it.toDomain() }
             Result.Success(tvShows)
         } else {
             Result.Failure(TvShowLoadException(response.exceptionMessage()))

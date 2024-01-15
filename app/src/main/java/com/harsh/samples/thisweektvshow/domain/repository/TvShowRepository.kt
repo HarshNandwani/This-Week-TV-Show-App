@@ -11,6 +11,10 @@ interface TvShowRepository {
     suspend fun getTrendingThisWeek(): Result<Data>
 
     /*
+    * Loads more trending tv shows
+    * */
+    suspend fun loadMoreTrending(): Result<List<TvShow>>
+    /*
     * Would be used to load TV Show genres & seasons details.
     *
     * [Implementation details]: Could have used a separate "MinimalTvShow" model but is counter productive in this case.

@@ -23,6 +23,9 @@ fun NavGraph(
             TvShowsListScreen(
                 state,
                 viewModel.error.collectAsStateWithLifecycle().value,
+                loadMoreShows = {
+                    viewModel.onEvent(UiEvent.LoadMoreTrendingTvShows)
+                },
                 onShowClick = { tvShow ->
                     viewModel.onEvent(UiEvent.LoadTvShowDetails(tvShow))
                     navHostController.navigate(route = Screen.DetailScreen.route)

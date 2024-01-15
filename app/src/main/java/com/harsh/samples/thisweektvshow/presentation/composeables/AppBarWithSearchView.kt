@@ -26,6 +26,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun AppBarWithSearchView(
@@ -73,7 +74,7 @@ fun AppBar(
 ) {
     TopAppBar(
         title = {
-            Text(text = title)
+            Text(text = title, style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp))
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primary,

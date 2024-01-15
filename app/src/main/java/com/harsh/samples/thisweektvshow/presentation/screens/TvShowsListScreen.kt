@@ -94,7 +94,7 @@ fun TvShowsGrid(
             state = lazyGridState,
             modifier = Modifier.padding(paddingValues)
         ) {
-            items(state.displayTvShows) { show ->
+            items(items = state.displayTvShows, key = { it.id }) { show ->
                 SingleTvShow(tvShow = show, onShowClick = onShowClick)
             }
 

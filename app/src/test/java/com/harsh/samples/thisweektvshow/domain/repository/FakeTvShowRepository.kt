@@ -19,6 +19,10 @@ class FakeTvShowRepository : TvShowRepository {
         return Result.Success(Data(tvShowList, Source.REMOTE, "Successful load"))
     }
 
+    override suspend fun loadMoreTrending(): Result<List<TvShow>> {
+        return Result.Success(tvShowList)
+    }
+
     override suspend fun getTvShowDetails(tvShow: TvShow): Result<TvShow> {
         return Result.Success(
             tvShow.copy(

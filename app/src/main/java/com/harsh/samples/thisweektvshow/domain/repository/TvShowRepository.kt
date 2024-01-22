@@ -37,4 +37,7 @@ interface TvShowRepository {
     * Mark a tv show as favorite
     * */
     suspend fun toggleFavorite(tvShowId: Long, isFavorite: Boolean)
+
+    // Used to perform any actions on app close
+    suspend fun closeRepository()
 }

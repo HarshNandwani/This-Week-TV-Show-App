@@ -10,4 +10,5 @@ sealed interface UiEvent {
     data object OnSearchClose : UiEvent
     data object Refresh : UiEvent
     data object RetrieveLastDetailTvShow : UiEvent
+    data object Closure : UiEvent
 }

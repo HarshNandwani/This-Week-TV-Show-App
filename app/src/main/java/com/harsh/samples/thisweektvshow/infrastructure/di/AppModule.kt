@@ -10,6 +10,7 @@ import com.harsh.samples.thisweektvshow.data.remote.Constants
 import com.harsh.samples.thisweektvshow.data.remote.TheMovieDbApi
 import com.harsh.samples.thisweektvshow.data.repository.DefaultTvShowRepository
 import com.harsh.samples.thisweektvshow.domain.repository.TvShowRepository
+import com.harsh.samples.thisweektvshow.domain.use_case.CloseRepositoryUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetSearchedShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetShowDetailsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetSimilarShowsUseCase
@@ -126,5 +127,11 @@ object AppModule {
     @Singleton
     fun provideLoadMoreTrendingShowsUseCase(repository: TvShowRepository): LoadMoreTrendingShowsUseCase {
         return LoadMoreTrendingShowsUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCloseRepositoryUseCase(repository: TvShowRepository): CloseRepositoryUseCase {
+        return CloseRepositoryUseCase(repository)
     }
 }

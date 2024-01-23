@@ -42,4 +42,9 @@ class TvShowActivity : ComponentActivity() {
         super.onResume()
         viewModel.onEvent(UiEvent.Refresh)
     }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.onEvent(UiEvent.Closure)
+    }
 }

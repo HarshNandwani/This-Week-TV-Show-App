@@ -38,6 +38,9 @@ class DefaultTvShowRepository(
     private val extCoroutineScope: CoroutineScope
 ) : TvShowRepository {
 
+    // This list will store favorite show ids so that load times are faster.
+    private lateinit var favoriteIds: MutableList<Long>
+
     /*
     * [Implementation Details] implementing manual paging.
     *
@@ -89,7 +92,7 @@ class DefaultTvShowRepository(
 
             when (remoteDataResult) {
                 is Result.Success -> {
-                    val updatedTvShowsWithFavorites = inferFavoritesIfAny(localTvShows, remoteDataResult.data)
+                    val updatedTvShowsWithFavorites = inferFavoritesIfAny(remoteDataResult.data)
                     // add these results to local db for caching
                     extCoroutineScope.launch(extCoroutineScope.coroutineContext) {
                         remoteDataResult.data.forEachIndexed { index, tvShow ->
@@ -112,12 +115,11 @@ class DefaultTvShowRepository(
             return Result.Failure(TvShowLoadException("Cannot load more shows, no internet connection"))
         }
         return when (val remoteDataResult = loadTrendingShowsRemote()) {
-            // We have to query again for favorites. Its much easier to maintain a list of favorite show IDs
             is Result.Success -> {
                 extCoroutineScope.launch(extCoroutineScope.coroutineContext) {
                     remoteDataResult.data.forEach { localDataSource.addTvShow(it.toEntity()) }
                 }
-                return Result.Success(inferFavoritesIfAny(loadFavoriteShowsLocal(), remoteDataResult.data))
+                return Result.Success(inferFavoritesIfAny(remoteDataResult.data))
             }
             is Result.Failure -> Result.Failure(remoteDataResult.exception)
         }
@@ -136,7 +138,7 @@ class DefaultTvShowRepository(
             val detailedTvShowDto = response.body() ?: return Result.Failure(Exception(response.exceptionMessage()))
             val detailedTvShow = detailedTvShowDto.toDomain()
             // Check if this is added as favorite
-            if (localDataSource.get(detailedTvShow.id)?.isFavorite == true) detailedTvShow.isFavorite = true
+            if (favoriteIds.contains(detailedTvShow.id)) detailedTvShow.isFavorite = true
             Result.Success(detailedTvShow)
         } else {
             Result.Failure(TvShowLoadException(response.exceptionMessage()))
@@ -158,10 +160,11 @@ class DefaultTvShowRepository(
             val searchedTvShowsDto = tvShowResponseDto.results.filter { it.posterPath != null }
             val searchedTvShows = searchedTvShowsDto.map { it.toDomain() }
             // add tv shows to local
+            // We can have a separate table with only tvShowId and isFavorite colums to avoid adding all data to room
             extCoroutineScope.launch(extCoroutineScope.coroutineContext) {
                 searchedTvShows.forEach { localDataSource.addTvShow(it.toEntity()) }
             }
-            val searchedTvShowsWithFavorites = inferFavoritesIfAny(loadFavoriteShowsLocal(), searchedTvShows)
+            val searchedTvShowsWithFavorites = inferFavoritesIfAny(searchedTvShows)
             Result.Success(searchedTvShowsWithFavorites)
         } else {
             Result.Failure(TvShowLoadException(response.exceptionMessage()))
@@ -182,14 +185,17 @@ class DefaultTvShowRepository(
                 response.body()?.results
                     ?: return Result.Failure(Exception(response.exceptionMessage()))
             val tvShows = tvShowsDto.filter { it.posterPath != null }.map { it.toDomain() }
-            Result.Success(tvShows)
+            Result.Success(inferFavoritesIfAny(tvShows))
         } else {
             Result.Failure(TvShowLoadException(response.exceptionMessage()))
         }
     }
 
     override suspend fun toggleFavorite(tvShowId: Long, isFavorite: Boolean) {
-        localDataSource.markFavorite(tvShowId, isFavorite)
+        if (isFavorite)
+            favoriteIds.add(tvShowId)
+        else
+            favoriteIds.remove(tvShowId)
     }
 
     // Utility functions
@@ -224,28 +230,26 @@ class DefaultTvShowRepository(
         }
     }
 
-    /*
-    * [Implementation Details] Instead of always loading favorites shows from db we can also just load a list of ids
-    * that are favorite on app start and keep adding ids to list when user adds tv shows to favorite from ui.
-    *
-    * It depends if there's only android client where favorites can be added or there are other clients like website
-    * also depends on requirements of how often we need to update it and
-    * how important is consistency compared to additional computation
-    *
-    * Although in our case there's only one client but To not make it very simpler I'm doing it this way.
-    * */
-    private suspend fun loadFavoriteShowsLocal(): List<TvShow> {
-        return localDataSource.getFavoriteTvShows().map { it.toDomain() }
+    private suspend fun loadFavorites() {
+        favoriteIds = localDataSource.getFavoriteTvShows().map { it.id }.toMutableList()
     }
 
-    //As favorites are persisted locally, here we take local and remote list and updated of shows are favorite in remote list
-    private fun inferFavoritesIfAny(localList: List<TvShow>?, remoteList: List<TvShow>): List<TvShow> {
-        val resultantList by lazy { remoteList.toMutableList() }
-        localList?.forEach { localTvShow ->
-            if (localTvShow.isFavorite) {
-                resultantList.find { remoteTvShow -> localTvShow.id == remoteTvShow.id }?.isFavorite = true
-            }
-        } ?: return remoteList
+    override suspend fun closeRepository() {
+        // save our favorites
+        favoriteIds.forEach { localDataSource.markFavorite(it, true) }
+    }
+
+    private suspend fun inferFavoritesIfAny(list: List<TvShow>): List<TvShow> {
+        if (!::favoriteIds.isInitialized) {
+            loadFavorites()
+        }
+        if (favoriteIds.isEmpty())
+            return list
+
+        val resultantList = list.toMutableList()
+        favoriteIds.forEach { favoriteId ->
+            resultantList.find { it.id == favoriteId }?.isFavorite = true
+        }
         return resultantList
     }
 }

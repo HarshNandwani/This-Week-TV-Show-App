@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.harsh.samples.thisweektvshow.domain.model.Source
 import com.harsh.samples.thisweektvshow.domain.model.TvShow
+import com.harsh.samples.thisweektvshow.domain.use_case.CloseRepositoryUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetSearchedShowsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetShowDetailsUseCase
 import com.harsh.samples.thisweektvshow.domain.use_case.GetSimilarShowsUseCase
@@ -28,7 +29,8 @@ class TvShowViewModel @Inject constructor(
     private val getShowDetails: GetShowDetailsUseCase,
     private val getSimilarShows: GetSimilarShowsUseCase,
     private val toggleShowFavorite: ToggleShowFavoriteUseCase,
-    private val loadMoreTrendingShows: LoadMoreTrendingShowsUseCase
+    private val loadMoreTrendingShows: LoadMoreTrendingShowsUseCase,
+    private val closeRepositoryUseCase: CloseRepositoryUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState())
@@ -108,6 +110,10 @@ class TvShowViewModel @Inject constructor(
                         newlyAdded = false
                     )
                 )
+            }
+
+            UiEvent.Closure -> {
+                viewModelScope.launch(Dispatchers.IO) { closeRepositoryUseCase() }
             }
         }
     }
